@@ -1,0 +1,146 @@
+@import "tailwindcss";
+
+@theme {
+  /* Mint surfaces, deep-green ink, one green accent — the reference language. */
+  --color-paper: #ffffff;
+  --color-paper-2: #f5f9f6;
+  --color-mint: #e3f0e9;
+  --color-mint-2: #d2e6db;
+
+  --color-ink: #102a24;
+  --color-ink-2: #3d534c;
+  --color-ink-3: #77897f;
+
+  --color-rule: #e5ece8;
+  --color-rule-strong: #cfdad4;
+
+  --color-pine: #1f9d61;
+  --color-pine-soft: #e6f5ed;
+
+  --color-signal: #b8443a;
+  --color-signal-soft: #fbeceb;
+  --color-ochre: #98772a;
+  --color-ochre-soft: #f7f1e2;
+
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-serif: "Fraunces", "Iowan Old Style", Georgia, "Times New Roman", serif;
+
+  /* The marketing canvas sits on a blurred green room, like the reference. */
+  --color-canvas: #fbfaf6;
+  --color-canvas-2: #f4f2ec;
+  --color-line: #e7e3d9;
+  --color-sage: #dfeae2;
+  --color-forest: #0f3d2e;
+  --color-leaf: #12a05e;
+
+  --shadow-soft: 0 14px 34px -22px rgba(16, 42, 36, 0.45);
+  --shadow-lift: 0 30px 70px -34px rgba(16, 42, 36, 0.5);
+  --shadow-glow: 0 12px 26px -12px rgba(31, 157, 97, 0.55);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: var(--color-mint-2);
+    color: var(--color-ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-pine);
+    outline-offset: 2px;
+  }
+  input,
+  select,
+  textarea,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+  table {
+    border-collapse: collapse;
+  }
+}
+
+@utility label {
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  line-height: 1.2;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+@utility num {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+@utility display {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.03;
+}
+
+@utility display-serif {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  letter-spacing: -0.022em;
+  line-height: 1.04;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@utility rise {
+  animation: rise 0.35s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+@utility floaty {
+  animation: floaty 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-rule-strong) transparent;
+}

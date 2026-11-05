@@ -1,0 +1,2175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UNFAZED — Therapist Practice Management SaaS Platform</title>
+  <!-- Load Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Load Google Font Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Load Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #ffffff;
+      color: #171717;
+    }
+    .font-mono-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.04em;
+    }
+    .rich-editor {
+      min-height: 150px;
+      outline: none;
+    }
+    .rich-editor p {
+      margin-bottom: 0.5rem;
+    }
+    .rich-editor ul {
+      list-style-type: disc;
+      padding-left: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+    /* Custom scrollbar for chat and tables */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-white text-neutral-900 min-h-screen flex flex-col selection:bg-neutral-900 selection:text-amber-300">
+
+  <!-- ===================================================================== -->
+  <!-- TOP GLOBAL NAVIGATION (KAGGLE-INSPIRED MINIMALIST WHITE HEADER)       -->
+  <!-- ===================================================================== -->
+  <header class="sticky top-0 z-40 border-b border-neutral-200 bg-white/95 backdrop-blur">
+    <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-3.5 sm:px-8">
+      <!-- Left: Brand Wordmark + Horizontal Navigation Links -->
+      <div class="flex flex-wrap items-center gap-6 lg:gap-8">
+        <div class="flex items-center gap-2 cursor-pointer" onclick="switchMainView('landing')">
+          <span class="text-2xl font-bold tracking-tighter text-neutral-900">unfazed</span>
+          <span class="rounded-full bg-amber-100 border border-amber-300 px-2 py-0.5 text-[10px] font-mono-eyebrow font-semibold text-amber-900">
+            Practice OS
+          </span>
+        </div>
+
+        <nav class="flex flex-wrap items-center gap-1 sm:gap-2">
+          <button onclick="switchMainView('landing')" id="nav-btn-landing" class="rounded-full px-3.5 py-1.5 text-xs sm:text-sm font-medium transition bg-neutral-900 text-white">
+            <span>Overview</span>
+          </button>
+          <button onclick="switchMainView('public')" id="nav-btn-public" class="rounded-full px-3.5 py-1.5 text-xs sm:text-sm font-medium transition text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100">
+            <span id="nav-slug-label">Branded Link (/dr-sharma)</span>
+          </button>
+          <button onclick="switchMainView('therapist')" id="nav-btn-therapist" class="rounded-full px-3.5 py-1.5 text-xs sm:text-sm font-medium transition text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100">
+            <span>Therapist Dashboard</span>
+          </button>
+          <button onclick="switchMainView('client')" id="nav-btn-client" class="rounded-full px-3.5 py-1.5 text-xs sm:text-sm font-medium transition text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100">
+            <span>Client Portal</span>
+          </button>
+          <button onclick="switchMainView('therapist'); switchTherapistTab('subscription')" class="hidden md:inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs sm:text-sm font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100">
+            <span>Plan Admin</span>
+            <i data-lucide="chevron-down" class="h-3.5 w-3.5"></i>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Right: Circular Search Icon, Reset Demo Link & Dark Pill CTA -->
+      <div class="flex items-center gap-3">
+        <button
+          onclick="switchMainView('therapist'); switchTherapistTab('clients'); setTimeout(() => document.getElementById('crm-search')?.focus(), 100);"
+          class="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 text-neutral-700 hover:bg-neutral-100 transition"
+          title="Search Clients CRM"
+        >
+          <i data-lucide="search" class="h-4 w-4"></i>
+        </button>
+        <button
+          onclick="resetToDefaultDemo()"
+          class="px-2.5 py-1.5 text-xs sm:text-sm font-medium text-neutral-600 hover:text-neutral-900 transition"
+          title="Reset saved changes to default demo state"
+        >
+          Reset Demo
+        </button>
+        <button
+          onclick="switchMainView('therapist')"
+          class="rounded-full bg-neutral-900 px-5 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-neutral-800 transition"
+        >
+          Practice Console
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Global Non-Blocking Toast Notification Box -->
+  <div id="toast-box" class="fixed bottom-5 right-5 z-50 hidden max-w-md rounded-2xl border border-neutral-800 bg-neutral-900 px-5 py-4 text-xs font-semibold text-white shadow-2xl transition-all">
+    <div class="flex items-start gap-3">
+      <div class="mt-0.5 rounded-lg bg-amber-400/20 p-1.5 text-amber-300">
+        <i data-lucide="bell-ring" class="h-4 w-4"></i>
+      </div>
+      <div class="flex-1">
+        <p id="toast-title" class="font-mono-eyebrow font-bold text-amber-300 uppercase tracking-wider text-[10px]">System Event</p>
+        <p id="toast-message" class="mt-0.5 text-neutral-100 leading-relaxed"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- VIEW 1: LANDING PAGE (KAGGLE FRONTIER HERO & GOLDEN MOUNTAIN BANNER)  -->
+  <!-- ===================================================================== -->
+  <main id="view-landing" class="flex-1 space-y-16 pb-16">
+    <!-- Kaggle-Style White Top Hero + Golden Mountain Graphic -->
+    <section class="relative overflow-hidden bg-white pt-12 sm:pt-16">
+      <div class="mx-auto max-w-4xl px-4 sm:px-6 text-center space-y-5">
+        <p class="font-mono-eyebrow text-xs sm:text-sm text-neutral-600">
+          Unfazed is for Clinical Practitioners
+        </p>
+        <h1 class="text-4xl sm:text-6xl font-bold tracking-tight text-neutral-900 leading-[1.12]">
+          Evaluating what works at therapy’s frontier
+        </h1>
+        <p class="mx-auto max-w-2xl text-base sm:text-lg text-neutral-500 font-normal leading-relaxed">
+          Unified appointment scheduling, zero-leak SOAP/DAP clinical notes, and Razorpay session packages where therapists shape real-world progress from one link:
+          <code onclick="switchMainView('public')" class="cursor-pointer rounded-md bg-neutral-100 px-2 py-0.5 font-mono-eyebrow text-sm text-neutral-900 border border-neutral-300 hover:bg-amber-50">unfazed.in/dr-sharma</code>
+        </p>
+
+        <div class="flex flex-wrap items-center justify-center gap-3 pt-3">
+          <button onclick="switchMainView('therapist')" class="inline-flex items-center gap-2 rounded-full bg-neutral-900 px-6 py-3 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-neutral-800 transition">
+            <span>Open Therapist Dashboard</span>
+            <i data-lucide="arrow-right" class="h-4 w-4"></i>
+          </button>
+          <button onclick="switchMainView('public')" class="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-6 py-3 text-xs sm:text-sm font-semibold text-neutral-800 hover:bg-neutral-50 transition">
+            <span>Test Branded Link (/dr-sharma)</span>
+          </button>
+          <button onclick="switchMainView('client')" class="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-6 py-3 text-xs sm:text-sm font-semibold text-neutral-800 hover:bg-neutral-50 transition">
+            <span>Open Client Portal</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Illustrated Golden Mountain Peak Banner with Vector Trajectory Lines & Floating Benchmark Cards -->
+      <div class="relative mt-12 w-full overflow-hidden border-y border-neutral-200" style="background: linear-gradient(90deg, #b8ab96 0%, #c8bca7 35%, #d8c383 70%, #f5b400 100%); min-height: 330px;">
+        <!-- Mountain & Trajectory Vectors SVG -->
+        <svg viewBox="0 0 1440 360" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-[330px] sm:h-[360px] object-cover block">
+          <!-- Warm golden glow on right -->
+          <defs>
+            <linearGradient id="mountainSnow" x1="720" y1="20" x2="720" y2="360" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#facc15" />
+              <stop offset="45%" stop-color="#eab308" />
+              <stop offset="100%" stop-color="#cbd5e1" />
+            </linearGradient>
+            <linearGradient id="mountainShadow" x1="500" y1="30" x2="950" y2="360" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#fef08a" />
+              <stop offset="50%" stop-color="#cbd5e1" />
+              <stop offset="100%" stop-color="#94a3b8" />
+            </linearGradient>
+          </defs>
+
+          <!-- Main Central Mountain Mass -->
+          <polygon points="180,360 660,38 745,24 1190,360" fill="url(#mountainShadow)" />
+          <!-- Golden Lit Faces on Peak -->
+          <polygon points="660,38 745,24 960,360 760,360 710,150 560,360 390,360" fill="url(#mountainSnow)" opacity="0.88" />
+          <!-- Ridge Texture Highlights -->
+          <polygon points="660,38 610,145 500,260 430,360 540,360 675,160" fill="#f8fafc" opacity="0.75" />
+          <polygon points="745,24 810,120 930,270 1040,360 950,360 765,130" fill="#facc15" opacity="0.7" />
+
+          <!-- Left & Right Technical Trajectory Lines with Arrowheads -->
+          <g stroke="#ffffff" stroke-width="1.6" opacity="0.9">
+            <!-- Left trajectory fan -->
+            <line x1="80" y1="350" x2="500" y2="110" />
+            <line x1="210" y1="360" x2="500" y2="110" />
+            <line x1="310" y1="360" x2="500" y2="110" />
+            <polygon points="500,110 489,115 495,122" fill="#ffffff" />
+
+            <!-- Center peak trajectory -->
+            <line x1="560" y1="360" x2="660" y2="155" />
+            <polygon points="660,155 650,162 657,167" fill="#ffffff" />
+
+            <line x1="795" y1="360" x2="778" y2="95" />
+            <polygon points="778,95 773,106 783,106" fill="#ffffff" />
+
+            <!-- Right trajectory fan -->
+            <line x1="940" y1="220" x2="1015" y2="118" />
+            <line x1="1040" y1="230" x2="1015" y2="118" />
+            <line x1="1190" y1="240" x2="1015" y2="118" />
+            <polygon points="1015,118 1012,129 1022,126" fill="#ffffff" />
+          </g>
+        </svg>
+
+        <!-- Floating Interactive Cards Over the Mountain Banner (Matching Kaggle's Floating Benchmark Card) -->
+        <div class="mx-auto max-w-7xl px-4 sm:px-8">
+          <div class="absolute bottom-5 left-4 right-4 sm:left-8 sm:right-8 flex flex-col md:flex-row items-stretch md:items-end justify-between gap-4 pointer-events-auto">
+            <!-- Left Floating Quick-Jump Pill Bar -->
+            <div class="flex flex-wrap gap-2 bg-white/95 backdrop-blur rounded-2xl p-3 shadow-lg border border-neutral-200 max-w-xl">
+              <button onclick="switchMainView('public')" class="rounded-xl bg-neutral-100 hover:bg-amber-100 px-3 py-2 text-left text-xs transition">
+                <span class="block font-mono-eyebrow text-[10px] font-bold text-neutral-500">FLOW 01</span>
+                <span class="font-bold text-neutral-900">Atomic Slot Lock (/dr-sharma)</span>
+              </button>
+              <button onclick="switchMainView('therapist'); switchTherapistTab('notes')" class="rounded-xl bg-neutral-100 hover:bg-amber-100 px-3 py-2 text-left text-xs transition">
+                <span class="block font-mono-eyebrow text-[10px] font-bold text-neutral-500">FLOW 02</span>
+                <span class="font-bold text-neutral-900">Zero-Leak SOAP/DAP Notes</span>
+              </button>
+              <button onclick="switchMainView('therapist'); switchTherapistTab('subscription')" class="rounded-xl bg-neutral-100 hover:bg-amber-100 px-3 py-2 text-left text-xs transition">
+                <span class="block font-mono-eyebrow text-[10px] font-bold text-neutral-500">FLOW 03</span>
+                <span class="font-bold text-neutral-900">Subscription Plan Admin</span>
+              </button>
+            </div>
+
+            <!-- Right Floating Kaggle-Style Benchmark Card -->
+            <div onclick="switchMainView('therapist')" class="cursor-pointer rounded-2xl bg-white p-5 shadow-xl border border-neutral-200 w-full md:w-80 hover:shadow-2xl transition">
+              <div class="flex items-center justify-between">
+                <span class="rounded-full bg-blue-100 px-2.5 py-0.5 font-mono-eyebrow text-[11px] font-semibold text-blue-800">
+                  Practice Benchmark
+                </span>
+                <span class="font-mono-eyebrow text-[11px] text-neutral-500">Live Sync</span>
+              </div>
+              <p class="mt-3 text-sm font-semibold text-neutral-900 truncate">
+                Dr. Sharma Clinical OS • RCI Registered
+              </p>
+              <p class="mt-1 text-xs text-neutral-500">
+                Click to inspect KPIs, edit subscription limits, or manage appointments →
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Core Architecture Pillars -->
+    <section class="mx-auto max-w-7xl px-4 sm:px-6">
+      <div class="text-center max-w-2xl mx-auto">
+        <p class="font-mono-eyebrow text-xs text-neutral-500 uppercase">System Architecture</p>
+        <h2 class="mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900">Production-Grade Healthcare Benchmarks</h2>
+        <p class="mt-2 text-xs sm:text-sm text-neutral-500">Every requirement from the master specification is wired into the interactive views above.</p>
+      </div>
+
+      <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm hover:border-neutral-400 transition">
+          <span class="rounded-full bg-amber-100 px-2.5 py-1 font-mono-eyebrow text-xs font-semibold text-amber-900">01 • SCHEDULING</span>
+          <h3 class="mt-4 text-base font-bold text-neutral-900">Concurrency-Safe Scheduling</h3>
+          <p class="mt-1.5 text-xs leading-relaxed text-neutral-600">Configurable 30/45/60/90-minute durations, buffer intervals, blocked holiday overrides, and atomic slot locking.</p>
+        </div>
+        <div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm hover:border-neutral-400 transition">
+          <span class="rounded-full bg-blue-100 px-2.5 py-1 font-mono-eyebrow text-xs font-semibold text-blue-900">02 • PRIVACY</span>
+          <h3 class="mt-4 text-base font-bold text-neutral-900">Strict Clinical Note Isolation</h3>
+          <p class="mt-1.5 text-xs leading-relaxed text-neutral-600">SOAP, DAP, and Freeform rich-text notes. Private clinical assessments are filtered out before serialization to client views.</p>
+        </div>
+        <div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm hover:border-neutral-400 transition">
+          <span class="rounded-full bg-neutral-100 px-2.5 py-1 font-mono-eyebrow text-xs font-semibold text-neutral-800">03 • BILLING</span>
+          <h3 class="mt-4 text-base font-bold text-neutral-900">Razorpay Test + Package Billing</h3>
+          <p class="mt-1.5 text-xs leading-relaxed text-neutral-600">Single-session checkout, 3/6/12 session discounted care bundles, platform fee net calculation, and downloadable invoices.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SaaS Subscription Tiers -->
+    <section class="mx-auto max-w-7xl px-4 sm:px-6">
+      <div class="text-center">
+        <p class="font-mono-eyebrow text-xs text-neutral-500 uppercase">Entitlements Engine</p>
+        <h2 class="mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900">Configurable Subscription Tiers</h2>
+        <p class="mt-1 text-xs text-neutral-500">Live-synced with your Subscription & Plan Customizer (<code class="rounded bg-neutral-100 px-1.5 py-0.5 font-mono-eyebrow">canAccess(therapistId, featureKey)</code>)</p>
+      </div>
+
+      <div id="landing-pricing-grid" class="mt-8 grid gap-6 md:grid-cols-3"></div>
+    </section>
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- VIEW 2: PUBLIC BRANDED BOOKING PAGE (/dr-sharma)                      -->
+  <!-- ===================================================================== -->
+  <main id="view-public" class="hidden flex-1 mx-auto max-w-6xl w-full px-4 py-8 sm:px-6 space-y-8">
+    <!-- Practitioner Branded Hero Card -->
+    <div class="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
+      <div class="flex flex-col md:flex-row gap-6 items-start md:items-center">
+        <img
+          id="pub-therapist-photo"
+          src="https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&w=400&q=80"
+          onerror="this.src='https://placehold.co/160x160/0f766e/ffffff?text=Dr+Sharma'"
+          alt="Dr. Ananya Sharma"
+          class="h-28 w-28 rounded-3xl object-cover ring-4 ring-teal-50 shrink-0"
+        />
+        <div class="flex-1">
+          <div class="flex flex-wrap items-center gap-2">
+            <span id="pub-badge-slug" class="rounded-full bg-teal-50 border border-teal-200 px-3 py-1 text-xs font-bold text-teal-800">
+              Verified Unfazed Practice • /dr-sharma
+            </span>
+            <span id="pub-languages" class="text-xs font-medium text-slate-500">
+              🌐 English, Hindi, Marathi
+            </span>
+          </div>
+          <h1 id="pub-therapist-name" class="mt-2 text-2xl sm:text-3xl font-extrabold text-slate-900">
+            Dr. Ananya Sharma
+          </h1>
+          <p id="pub-therapist-title" class="text-xs sm:text-sm font-semibold text-teal-700">
+            Senior Clinical Psychologist (M.Phil NIMHANS, RCI Licensed)
+          </p>
+          <p id="pub-therapist-bio" class="mt-2.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
+            Over 9 years of clinical experience in Cognitive Behavioral Therapy (CBT), Acceptance & Commitment Therapy (ACT), and trauma-informed mindfulness for young adults and working professionals across India.
+          </p>
+          <div id="pub-specs-list" class="mt-3 flex flex-wrap gap-1.5"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid gap-8 lg:grid-cols-12">
+      <!-- Left Column: Consultation Services & 3/6/12 Session Packages -->
+      <div class="lg:col-span-5 space-y-6">
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 class="text-base font-bold text-slate-900">1. Choose Consultation Service</h2>
+          <p class="text-xs text-slate-500">Select the session format and duration below.</p>
+          <div id="pub-services-container" class="mt-4 space-y-3"></div>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-bold text-slate-900">Multi-Session Care Packages</h2>
+            <span class="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700">3, 6 & 12 Bundles</span>
+          </div>
+          <p class="mt-1 text-xs text-slate-500">Pre-purchase discounted bundles to redeem during booking.</p>
+          <div id="pub-packages-container" class="mt-4 space-y-3"></div>
+        </div>
+      </div>
+
+      <!-- Right Column: Real-Time Date & IST Slot Picker -->
+      <div class="lg:col-span-7">
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm space-y-6">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div>
+              <h2 class="text-base font-bold text-slate-900">2. Select Date & Available Time Slot</h2>
+              <p class="text-xs text-slate-500">Times displayed in Indian Standard Time (Asia/Kolkata, IST) • Buffer: <span id="pub-buffer-display">15</span> mins</p>
+            </div>
+            <span class="rounded-xl bg-teal-50 px-3 py-1.5 text-xs font-bold text-teal-800">Atomic Lock Enabled</span>
+          </div>
+
+          <!-- Date Selector & Package Redemption Option -->
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">Appointment Date</label>
+              <input
+                type="date"
+                id="pub-date-picker"
+                value="2026-10-26"
+                onchange="renderPublicSlots()"
+                class="mt-1.5 w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs font-bold focus:border-teal-600 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">Payment Method</label>
+              <select id="pub-payment-method" class="mt-1.5 w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs font-bold focus:border-teal-600 focus:outline-none">
+                <option value="RAZORPAY_MOCK">Razorpay Test / Mock Checkout</option>
+                <option value="REDEEM_PACKAGE">Redeem from Active Session Package</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Dynamic Slot Grid -->
+          <div>
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">Available IST Time Slots</label>
+              <span class="text-[11px] text-slate-500">Booked slots lock immediately</span>
+            </div>
+            <div id="pub-slots-container" class="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2.5"></div>
+          </div>
+
+          <!-- Confirmation Footer -->
+          <div class="rounded-2xl bg-slate-50 p-4 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <p class="text-[11px] font-semibold uppercase text-slate-400">Booking Summary (Client: Aarav Verma)</p>
+              <p id="pub-booking-summary" class="text-xs sm:text-sm font-extrabold text-slate-900 mt-0.5">
+                Select an available time slot above
+              </p>
+            </div>
+            <button
+              onclick="confirmPublicAppointment()"
+              class="rounded-xl bg-teal-700 px-6 py-3 text-xs font-extrabold text-white shadow-sm hover:bg-teal-800 transition shrink-0"
+            >
+              Confirm & Lock Slot
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- VIEW 3: THERAPIST PRACTICE DASHBOARD (KAGGLE FRONTIER AESTHETIC)      -->
+  <!-- ===================================================================== -->
+  <main id="view-therapist" class="hidden flex-1 w-full pb-12">
+    <!-- Kaggle-Style Dashboard Hero Header with Golden Mountain Graphic & Floating Benchmark Card -->
+    <div class="border-b border-neutral-200 bg-white">
+      <div class="mx-auto max-w-7xl px-4 pt-8 pb-6 sm:px-8">
+        <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+          <div>
+            <p class="font-mono-eyebrow text-xs text-neutral-500">
+              Unfazed is for Clinical Practitioners • <span id="th-dash-tier-badge" class="font-semibold text-neutral-900">PRO PRACTITIONER TIER</span>
+            </p>
+            <h1 id="th-dash-name" class="mt-2 text-3xl sm:text-4xl font-bold tracking-tight text-neutral-900">
+              Dr. Ananya Sharma
+            </h1>
+            <p class="mt-2 text-xs sm:text-sm text-neutral-500">
+              Evaluating clinical outcomes, appointments, and practice entitlements at
+              <button onclick="switchMainView('public')" class="font-mono-eyebrow font-semibold text-neutral-900 underline hover:text-amber-700">
+                unfazed.in/<span id="th-dash-slug">dr-sharma</span>
+              </button>
+            </p>
+          </div>
+
+          <!-- Interactive Tier Switcher Pills (Kaggle Minimalist Pill Style) -->
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="font-mono-eyebrow text-[11px] text-neutral-500 mr-1">Active Tier:</span>
+            <button onclick="setSubscriptionTier('STARTER')" id="tier-btn-STARTER" class="rounded-full px-4 py-1.5 text-xs font-semibold border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-100 transition">
+              STARTER (5 Cap)
+            </button>
+            <button onclick="setSubscriptionTier('PRO')" id="tier-btn-PRO" class="rounded-full px-4 py-1.5 text-xs font-semibold bg-neutral-900 text-white shadow-sm transition">
+              PRO (50 Cap)
+            </button>
+            <button onclick="setSubscriptionTier('CLINIC')" id="tier-btn-CLINIC" class="rounded-full px-4 py-1.5 text-xs font-semibold border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-100 transition">
+              CLINIC (Unlimited)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard Golden Mountain Horizon Strip with Floating Benchmark Status Card -->
+      <div class="relative w-full overflow-hidden border-t border-neutral-200" style="background: linear-gradient(90deg, #b8ab96 0%, #c8bca7 35%, #d8c383 70%, #f5b400 100%); height: 155px;">
+        <svg viewBox="0 0 1440 160" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full object-cover block">
+          <polygon points="220,160 660,12 745,6 1150,160" fill="#eab308" opacity="0.85" />
+          <polygon points="660,12 610,80 460,160 580,160 690,70" fill="#f8fafc" opacity="0.75" />
+          <polygon points="745,6 830,75 990,160 860,160 755,65" fill="#fef08a" opacity="0.7" />
+          <g stroke="#ffffff" stroke-width="1.4" opacity="0.9">
+            <line x1="140" y1="160" x2="510" y2="38" />
+            <line x1="280" y1="160" x2="510" y2="38" />
+            <polygon points="510,38 500,43 505,49" fill="#ffffff" />
+            <line x1="775" y1="160" x2="765" y2="28" />
+            <polygon points="765,28 760,38 770,38" fill="#ffffff" />
+            <line x1="930" y1="130" x2="1020" y2="42" />
+            <line x1="1120" y1="145" x2="1020" y2="42" />
+          </g>
+        </svg>
+
+        <!-- Floating Kaggle-Style Benchmark Card Inside Therapist Dashboard -->
+        <div class="mx-auto max-w-7xl px-4 sm:px-8">
+          <div onclick="switchTherapistTab('subscription')" class="cursor-pointer absolute bottom-3 right-4 sm:right-8 rounded-2xl bg-white px-4 py-3 shadow-lg border border-neutral-200 w-72 sm:w-80 hover:shadow-xl transition">
+            <div class="flex items-center justify-between">
+              <span class="rounded-full bg-blue-100 px-2.5 py-0.5 font-mono-eyebrow text-[10px] font-semibold text-blue-800">
+                Entitlement Benchmark
+              </span>
+              <span class="font-mono-eyebrow text-[10px] text-neutral-400">canAccess()</span>
+            </div>
+            <p class="mt-1.5 text-xs font-semibold text-neutral-900 truncate">
+              Customize Subscription Limits & Pricing →
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mx-auto max-w-7xl px-4 pt-6 sm:px-8 grid gap-6 lg:grid-cols-12">
+      <!-- Left Sidebar Navigation (8 Complete Sections in Clean Kaggle High-Contrast Style) -->
+      <aside class="lg:col-span-3">
+        <div class="sticky top-20 space-y-1 rounded-2xl border border-neutral-200 bg-white p-3 shadow-sm">
+          <p class="px-3 py-1.5 font-mono-eyebrow text-[10px] font-semibold uppercase text-neutral-400">
+            Practice Console
+          </p>
+          <button onclick="switchTherapistTab('overview')" id="th-nav-overview" class="w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 text-left text-xs font-semibold bg-neutral-900 text-white shadow-sm">
+            <span>A. Overview & Analytics</span>
+            <span>→</span>
+          </button>
+          <button onclick="switchTherapistTab('profile')" id="th-nav-profile" class="w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 text-left text-xs font-medium text-neutral-600 hover:bg-neutral-100">
+            <span>B. Profile & Services Editor</span>
+          </button>
+          <button onclick="switchTherapistTab('subscription')" id="th-nav-subscription" class="w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 text-left text-xs font-medium text-neutral-600 hover:bg-neutral-100">
+            <span>C. Subscription & Plan Admin</span>
+          </button>
+          <button onclick="switchTherapistTab('clients')" id="th-nav-clients" class="w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 text-left text-xs font-medium text-neutral-600 hover:bg-neutral-100">
+            <span>D. Clients CRM</span>
+          </button>
+          <button onclick="switchTherapistTab('schedule')" id="th-nav-schedule" class="w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 text-left text-xs font-medium text-neutral-600 hover:bg-neutral-100">
+            <span>E. Schedule & Slots</span>
+          </button>
+          <button onclick="switchTherapistTab('notes')" id="th-nav-notes" class="w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 text-left text-xs font-medium text-neutral-600 hover:bg-neutral-100">
+            <span>F. Clinical Notes (SOAP/DAP)</span>
+          </button>
+          <button onclick="switchTherapistTab('payments')" id="th-nav-payments" class="w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 text-left text-xs font-medium text-neutral-600 hover:bg-neutral-100">
+            <span>G. Payments & Packages</span>
+          </button>
+          <button onclick="switchTherapistTab('chat')" id="th-nav-chat" class="w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 text-left text-xs font-medium text-neutral-600 hover:bg-neutral-100">
+            <span>H. Real-Time Care Chat</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main Therapist Workspace -->
+      <div class="lg:col-span-9 space-y-6">
+
+        <!-- TAB A: OVERVIEW & ANALYTICS -->
+        <div id="th-panel-overview" class="space-y-6">
+          <!-- 4 Kaggle-Benchmark Style KPI Cards -->
+          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+              <div class="flex items-center justify-between">
+                <span class="rounded-full bg-blue-100 px-2.5 py-0.5 font-mono-eyebrow text-[10px] font-semibold text-blue-800">Active Clients</span>
+                <span class="font-mono-eyebrow text-[10px] text-neutral-400">CRM</span>
+              </div>
+              <p id="th-kpi-clients" class="mt-3 text-2xl font-bold text-neutral-900">4 / 50</p>
+              <p id="th-kpi-clients-sub" class="mt-1 text-[11px] text-neutral-500 font-medium">Within PRO tier limit</p>
+            </div>
+            <div class="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+              <div class="flex items-center justify-between">
+                <span class="rounded-full bg-amber-100 px-2.5 py-0.5 font-mono-eyebrow text-[10px] font-semibold text-amber-900">Confirmed</span>
+                <span class="font-mono-eyebrow text-[10px] text-neutral-400">IST</span>
+              </div>
+              <p id="th-kpi-upcoming" class="mt-3 text-2xl font-bold text-neutral-900">2</p>
+              <p class="mt-1 text-[11px] text-neutral-500">Locked on calendar</p>
+            </div>
+            <div class="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+              <div class="flex items-center justify-between">
+                <span class="rounded-full bg-emerald-100 px-2.5 py-0.5 font-mono-eyebrow text-[10px] font-semibold text-emerald-800">Net Revenue</span>
+                <span class="font-mono-eyebrow text-[10px] text-neutral-400">-5% Fee</span>
+              </div>
+              <p id="th-kpi-revenue" class="mt-3 text-2xl font-bold text-neutral-900">₹11,761</p>
+              <p class="mt-1 text-[11px] text-neutral-500">Verified settlements</p>
+            </div>
+            <div class="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+              <div class="flex items-center justify-between">
+                <span class="rounded-full bg-neutral-100 px-2.5 py-0.5 font-mono-eyebrow text-[10px] font-semibold text-neutral-700">No-Show Rate</span>
+                <span class="font-mono-eyebrow text-[10px] text-neutral-400">KPI</span>
+              </div>
+              <p id="th-kpi-noshow" class="mt-3 text-2xl font-bold text-neutral-900">0%</p>
+              <p class="mt-1 text-[11px] text-neutral-500">Aggregation pipeline</p>
+            </div>
+          </div>
+
+          <!-- Visual Analytics Breakdown -->
+          <div class="grid gap-6 md:grid-cols-2">
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h3 class="text-sm font-bold text-slate-900">Monthly Revenue Trend (Gross vs. Net INR)</h3>
+              <p class="text-xs text-slate-500">Backed by MongoDB <code class="bg-slate-100 px-1 rounded">$group</code> aggregation</p>
+              <div class="mt-4 space-y-3 text-xs">
+                <div>
+                  <div class="flex justify-between font-semibold"><span>August 2026</span><span>₹14,200</span></div>
+                  <div class="mt-1 h-2.5 w-full rounded-full bg-slate-100"><div class="h-2.5 rounded-full bg-teal-600" style="width: 62%"></div></div>
+                </div>
+                <div>
+                  <div class="flex justify-between font-semibold"><span>September 2026</span><span>₹18,900</span></div>
+                  <div class="mt-1 h-2.5 w-full rounded-full bg-slate-100"><div class="h-2.5 rounded-full bg-teal-600" style="width: 80%"></div></div>
+                </div>
+                <div>
+                  <div class="flex justify-between font-semibold"><span>October 2026 (Current)</span><span id="th-bar-oct-rev">₹12,380</span></div>
+                  <div class="mt-1 h-2.5 w-full rounded-full bg-slate-100"><div class="h-2.5 rounded-full bg-teal-700" style="width: 74%"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div class="flex items-center justify-between">
+                <h3 class="text-sm font-bold text-slate-900">Service Popularity Cohort Analytics</h3>
+                <span class="rounded bg-teal-50 px-2 py-0.5 text-[10px] font-bold text-teal-800">PRO/CLINIC GATED</span>
+              </div>
+              <div id="th-advanced-analytics-box" class="mt-4 space-y-2.5 text-xs"></div>
+            </div>
+          </div>
+
+          <!-- Appointments & Status Control Table -->
+          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div class="flex items-center justify-between">
+              <h2 class="text-sm font-bold text-slate-900">Appointment Schedule & Status Transitions</h2>
+              <span class="text-xs text-slate-500">Click status buttons to update KPIs in real time</span>
+            </div>
+            <div class="mt-4 overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead>
+                  <tr class="border-b border-slate-200 text-slate-500">
+                    <th class="pb-2.5">Client</th>
+                    <th class="pb-2.5">Service</th>
+                    <th class="pb-2.5">Date & Slot (IST)</th>
+                    <th class="pb-2.5">Status</th>
+                    <th class="pb-2.5">Payment</th>
+                    <th class="pb-2.5">Update Status</th>
+                  </tr>
+                </thead>
+                <tbody id="th-appointments-tbody" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB B: BRANDED PROFILE & SERVICES EDITOR -->
+        <div id="th-panel-profile" class="hidden space-y-6">
+          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+              <div>
+                <h2 class="text-base font-bold text-slate-900">Branded Practice Information Editor</h2>
+                <p class="text-xs text-slate-500">Every change persists in your browser & updates your public link immediately.</p>
+              </div>
+              <span class="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-800">Auto-Synced to Public Link</span>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label class="block text-xs font-bold text-slate-700">Practitioner Full Name</label>
+                <input id="inp-prof-name" class="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs font-medium" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700">Unique Public URL Slug (e.g. dr-sharma)</label>
+                <input id="inp-prof-slug" class="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs font-medium" />
+              </div>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label class="block text-xs font-bold text-slate-700">Clinical Title & Registration</label>
+                <input id="inp-prof-title" class="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs font-medium" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700">Profile Image URL</label>
+                <input id="inp-prof-photo" class="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs font-medium" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700">Practice Biography</label>
+              <textarea id="inp-prof-bio" rows="3" class="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs font-medium"></textarea>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label class="block text-xs font-bold text-slate-700">Specializations (comma-separated)</label>
+                <input id="inp-prof-specs" class="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs font-medium" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700">Languages Spoken (comma-separated)</label>
+                <input id="inp-prof-langs" class="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs font-medium" />
+              </div>
+            </div>
+
+            <button onclick="saveTherapistProfile()" class="rounded-xl bg-teal-700 px-6 py-2.5 text-xs font-bold text-white hover:bg-teal-800">
+              Save & Publish Profile Information
+            </button>
+          </div>
+
+          <!-- Consultation Services Manager (Add / Edit / Delete) -->
+          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+            <div>
+              <h2 class="text-base font-bold text-slate-900">Manage Consultation Services & Pricing</h2>
+              <p class="text-xs text-slate-500">Add, edit prices, or remove consultation formats shown on your booking page.</p>
+            </div>
+
+            <div class="grid gap-3 sm:grid-cols-5 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+              <input id="srv-new-name" placeholder="Service Name (e.g. Trauma Therapy)" class="rounded-xl border border-slate-300 px-3 py-2 text-xs sm:col-span-2" />
+              <select id="srv-new-duration" class="rounded-xl border border-slate-300 px-3 py-2 text-xs font-bold">
+                <option value="30">30 mins</option>
+                <option value="45">45 mins</option>
+                <option value="60" selected>60 mins</option>
+                <option value="90">90 mins</option>
+              </select>
+              <input id="srv-new-price" type="number" placeholder="Fee (INR)" value="1800" class="rounded-xl border border-slate-300 px-3 py-2 text-xs" />
+              <button onclick="addConsultationService()" class="rounded-xl bg-teal-700 px-4 py-2 text-xs font-bold text-white hover:bg-teal-800">
+                + Add Service
+              </button>
+            </div>
+
+            <div id="th-services-editor-list" class="space-y-2.5"></div>
+          </div>
+        </div>
+
+        <!-- TAB C: SUBSCRIPTION & PLAN ADMIN (SELF-SERVE CUSTOMIZER) -->
+        <div id="th-panel-subscription" class="hidden space-y-6">
+          <!-- Active Plan Switcher & Summary -->
+          <div class="rounded-2xl border-2 border-teal-600 bg-teal-950 p-6 text-white shadow-md">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <span class="rounded-full bg-teal-800 px-3 py-0.5 text-[11px] font-bold uppercase tracking-wider text-teal-200">
+                  Active Practice Subscription
+                </span>
+                <h2 id="sub-active-title" class="mt-2 text-2xl font-extrabold">PRO PRACTITIONER (₹1,999/mo)</h2>
+                <p id="sub-active-desc" class="mt-1 text-xs text-teal-200">
+                  Next Renewal: 29 Nov 2026 • Active Client Cap: 50 • Templates: FREEFORM, SOAP, DAP, BIRP
+                </p>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <button onclick="setSubscriptionTier('STARTER')" class="rounded-xl border border-teal-500/40 bg-teal-900 px-4 py-2 text-xs font-bold text-teal-100 hover:bg-teal-800">
+                  Switch to STARTER
+                </button>
+                <button onclick="setSubscriptionTier('PRO')" class="rounded-xl bg-white px-4 py-2 text-xs font-extrabold text-teal-950 hover:bg-teal-50">
+                  Switch to PRO
+                </button>
+                <button onclick="setSubscriptionTier('CLINIC')" class="rounded-xl border border-teal-500/40 bg-teal-900 px-4 py-2 text-xs font-bold text-teal-100 hover:bg-teal-800">
+                  Switch to CLINIC
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Customize Any Subscription Tier Details (Price, Client Cap, Templates, Features) -->
+          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+              <div>
+                <h3 class="text-base font-bold text-slate-900">Customize Subscription Tier Plans & Entitlement Caps</h3>
+                <p class="text-xs text-slate-500">
+                  Modify the plan name, monthly price (INR), active client limit, or allowed clinical templates for any tier. Changes update the Landing Page & <code class="bg-slate-100 px-1 rounded">canAccess()</code> engine immediately!
+                </p>
+              </div>
+              <select id="sub-edit-tier-selector" onchange="populateTierEditorForm()" class="rounded-xl border border-teal-600 bg-teal-50 px-3.5 py-2 text-xs font-extrabold text-teal-900">
+                <option value="STARTER">Editing Tier: STARTER</option>
+                <option value="PRO" selected>Editing Tier: PRO</option>
+                <option value="CLINIC">Editing Tier: CLINIC</option>
+              </select>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-700">Plan Display Name</label>
+                <input id="sub-edit-name" class="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs font-semibold" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700">Monthly Price (INR)</label>
+                <input id="sub-edit-price" type="number" class="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs font-semibold" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700">Max Active Clients Limit</label>
+                <input id="sub-edit-max-clients" type="number" class="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs font-semibold" />
+              </div>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label class="block text-xs font-bold text-slate-700">Allowed Clinical Note Templates (comma-separated)</label>
+                <input id="sub-edit-templates" placeholder="FREEFORM, SOAP, DAP, BIRP" class="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs font-semibold" />
+              </div>
+              <div class="flex flex-col justify-end gap-2">
+                <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                  <input type="checkbox" id="sub-edit-pkg-flag" class="h-4 w-4 rounded text-teal-700" />
+                  <span>Allow Custom 3/6/12 Session Packages</span>
+                </label>
+                <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                  <input type="checkbox" id="sub-edit-adv-flag" class="h-4 w-4 rounded text-teal-700" />
+                  <span>Unlock Advanced Cohort & Service Analytics</span>
+                </label>
+              </div>
+            </div>
+
+            <button onclick="saveSubscriptionTierConfig()" class="rounded-xl bg-teal-700 px-6 py-2.5 text-xs font-bold text-white hover:bg-teal-800">
+              Save Subscription Plan Configuration
+            </button>
+          </div>
+
+          <!-- Practice Billing & GST Information Editor -->
+          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+            <div>
+              <h3 class="text-base font-bold text-slate-900">Practice Billing Details, GSTIN & Payout Account</h3>
+              <p class="text-xs text-slate-500">Appears on your subscription invoices and client tax receipts.</p>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label class="block text-xs font-bold text-slate-700">Registered Clinic / Practice Legal Name</label>
+                <input id="bill-clinic-name" class="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700">Billing Email & Receipt Copy Address</label>
+                <input id="bill-email" class="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700">Practice GSTIN / PAN</label>
+                <input id="bill-gstin" class="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700">Payment Method / UPI VPA on File</label>
+                <input id="bill-payment-method" class="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700">Clinic Billing Address</label>
+              <input id="bill-address" class="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs" />
+            </div>
+
+            <button onclick="saveBillingDetails()" class="rounded-xl bg-slate-900 px-6 py-2.5 text-xs font-bold text-white hover:bg-slate-800">
+              Update Billing & Tax Profile
+            </button>
+          </div>
+        </div>
+
+        <!-- TAB D: CLIENTS CRM -->
+        <div id="th-panel-clients" class="hidden space-y-6">
+          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 class="text-base font-bold text-slate-900">Add New Client to Practice CRM</h2>
+                <p class="text-xs text-slate-500">Protected by <code class="bg-slate-100 px-1 rounded">canAccess(therapistId, 'ADD_ACTIVE_CLIENT')</code></p>
+              </div>
+              <span id="crm-entitlement-pill" class="rounded-full bg-teal-50 px-3 py-1 text-xs font-bold text-teal-800"></span>
+            </div>
+
+            <div class="mt-4 grid gap-3 sm:grid-cols-4">
+              <input id="crm-new-name" placeholder="Client Full Name" class="rounded-xl border border-slate-300 px-3.5 py-2 text-xs" />
+              <input id="crm-new-email" placeholder="client@email.com" class="rounded-xl border border-slate-300 px-3.5 py-2 text-xs" />
+              <input id="crm-new-tags" placeholder="Tags (e.g. CBT, ADHD)" class="rounded-xl border border-slate-300 px-3.5 py-2 text-xs" />
+              <button onclick="addCrmClient()" class="rounded-xl bg-teal-700 px-4 py-2 text-xs font-bold text-white hover:bg-teal-800">
+                + Add Active Client
+              </button>
+            </div>
+          </div>
+
+          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <h2 class="text-base font-bold text-slate-900">Assigned Client Directory</h2>
+              <input
+                id="crm-search"
+                oninput="renderClientsCrm()"
+                placeholder="Search by name, email, or tag..."
+                class="rounded-xl border border-slate-300 px-3.5 py-1.5 text-xs"
+              />
+            </div>
+            <div id="crm-clients-list" class="mt-4 space-y-2.5"></div>
+          </div>
+        </div>
+
+        <!-- TAB D: SCHEDULE & AVAILABILITY -->
+        <div id="th-panel-schedule" class="hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-6">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Weekly Availability, Session Durations & Blocked Dates</h2>
+            <p class="text-xs text-slate-500">Controls slot generation on your public booking link.</p>
+          </div>
+
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label class="block text-xs font-bold text-slate-700">Default Session Duration</label>
+              <select id="avail-duration" class="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs font-semibold">
+                <option value="30">30 Minutes</option>
+                <option value="45">45 Minutes</option>
+                <option value="60" selected>60 Minutes</option>
+                <option value="90">90 Minutes</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700">Buffer Time Between Sessions (Minutes)</label>
+              <input type="number" id="avail-buffer" value="15" class="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs font-semibold" />
+            </div>
+          </div>
+
+          <div class="border-t border-slate-200 pt-4">
+            <label class="block text-xs font-bold text-slate-700">Add Blocked Date / Holiday Override</label>
+            <div class="mt-2 flex flex-wrap gap-2">
+              <input type="date" id="avail-block-date" value="2026-10-30" class="rounded-xl border border-slate-300 px-3.5 py-2 text-xs" />
+              <input id="avail-block-reason" placeholder="Reason (e.g., RCI Workshop)" class="rounded-xl border border-slate-300 px-3.5 py-2 text-xs" />
+              <button onclick="addBlockedDateOverride()" class="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white">
+                + Block Date
+              </button>
+            </div>
+            <div id="avail-blocked-pills" class="mt-3 flex flex-wrap gap-2"></div>
+          </div>
+
+          <button onclick="saveAvailabilitySettings()" class="rounded-xl bg-teal-700 px-6 py-2.5 text-xs font-bold text-white hover:bg-teal-800">
+            Save Schedule Rules
+          </button>
+        </div>
+
+        <!-- TAB E: CLINICAL NOTES (SOAP/DAP + PRIVACY ENFORCEMENT) -->
+        <div id="th-panel-notes" class="hidden space-y-6">
+          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 class="text-base font-bold text-slate-900">Clinical Session Note Editor (SOAP / DAP / Freeform)</h2>
+                <p class="text-xs text-slate-500">
+                  Private notes are strictly isolated from Client APIs. DAP template requires <strong>PRO</strong> or <strong>CLINIC</strong> tier.
+                </p>
+              </div>
+              <div class="flex gap-1.5">
+                <button onclick="applyNoteTemplate('SOAP')" class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold hover:bg-slate-100">SOAP Template</button>
+                <button onclick="applyNoteTemplate('DAP')" class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold hover:bg-slate-100">DAP Template (PRO)</button>
+                <button onclick="applyNoteTemplate('FREEFORM')" class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold hover:bg-slate-100">Freeform</button>
+              </div>
+            </div>
+
+            <div class="grid gap-3 sm:grid-cols-3">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600">Client</label>
+                <select id="note-client-select" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-xs font-semibold"></select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600">Note Title</label>
+                <input id="note-title-input" placeholder="e.g., Session #2 Clinical Formulation" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-xs" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600">Privacy Level (Critical Boundary)</label>
+                <select id="note-privacy-select" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-xs font-bold">
+                  <option value="private">🔒 PRIVATE (Therapist Only — Never Leaked)</option>
+                  <option value="shared">🤝 SHARED (Visible in Client Portal)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Rich Text Formatting Bar + ContentEditable -->
+            <div class="overflow-hidden rounded-xl border border-slate-300 bg-white">
+              <div class="flex items-center gap-2 border-b border-slate-200 bg-slate-50 px-3 py-1.5 text-xs">
+                <button type="button" onclick="document.execCommand('bold')" class="rounded px-2 py-1 font-extrabold hover:bg-slate-200">B</button>
+                <button type="button" onclick="document.execCommand('italic')" class="rounded px-2 py-1 italic hover:bg-slate-200">I</button>
+                <button type="button" onclick="document.execCommand('insertUnorderedList')" class="rounded px-2 py-1 hover:bg-slate-200">• List</button>
+                <span id="active-template-badge" class="ml-auto rounded bg-teal-100 px-2 py-0.5 text-[10px] font-bold text-teal-800">Template: SOAP</span>
+              </div>
+              <div id="note-rich-editor" contenteditable="true" class="rich-editor p-3.5 text-xs text-slate-800">
+                <p><strong>Subjective:</strong> Client reported acute Sunday evening anticipatory anxiety regarding sprint deadlines.</p>
+                <p><strong>Objective:</strong> Alert, oriented x3, engaged in session.</p>
+                <p><strong>Assessment:</strong> High perfectionism schemas triggering sympathetic nervous system activation.</p>
+                <p><strong>Plan:</strong> Introduce cognitive defusion and evening digital sunset ritual.</p>
+              </div>
+            </div>
+
+            <button onclick="saveTherapistNote()" class="rounded-xl bg-teal-700 px-6 py-2.5 text-xs font-bold text-white hover:bg-teal-800">
+              Save Clinical Note
+            </button>
+          </div>
+
+          <!-- Saved Clinical Notes List -->
+          <div id="th-notes-container" class="space-y-3"></div>
+        </div>
+
+        <!-- TAB F: PAYMENTS, PACKAGES & INVOICES -->
+        <div id="th-panel-payments" class="hidden space-y-6">
+          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 class="text-base font-bold text-slate-900">Create New Session Package Bundle (3, 6, or 12 Sessions)</h2>
+            <p class="text-xs text-slate-500">Gated by <code class="bg-slate-100 px-1 rounded">canAccess(therapistId, 'SESSION_PACKAGES')</code></p>
+            <div class="mt-4 grid gap-3 sm:grid-cols-4">
+              <input id="pkg-new-name" placeholder="Bundle Title" class="rounded-xl border border-slate-300 px-3 py-2 text-xs sm:col-span-2" />
+              <select id="pkg-new-count" class="rounded-xl border border-slate-300 px-3 py-2 text-xs font-bold">
+                <option value="3">3 Sessions</option>
+                <option value="6">6 Sessions</option>
+                <option value="12">12 Sessions</option>
+              </select>
+              <div class="flex gap-2">
+                <input id="pkg-new-price" type="number" placeholder="INR" value="4800" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs" />
+                <button onclick="createNewPackageBundle()" class="rounded-xl bg-teal-700 px-4 py-2 text-xs font-bold text-white shrink-0">+ Add</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 class="text-base font-bold text-slate-900">Verified Payment Ledger & Downloadable Invoices</h2>
+            <div class="mt-4 overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead>
+                  <tr class="border-b border-slate-200 text-slate-500">
+                    <th class="pb-2.5">Invoice #</th>
+                    <th class="pb-2.5">Client</th>
+                    <th class="pb-2.5">Description</th>
+                    <th class="pb-2.5">Gross / Platform Fee / Net</th>
+                    <th class="pb-2.5">Invoice Receipt</th>
+                  </tr>
+                </thead>
+                <tbody id="th-payments-tbody" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB G: REAL-TIME CARE CHAT -->
+        <div id="th-panel-chat" class="hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+              <h2 class="text-base font-bold text-slate-900">Encrypted Care Channel — Aarav Verma</h2>
+              <p class="text-xs text-slate-500">Messages sync instantaneously with the Client Portal view.</p>
+            </div>
+            <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-800">Socket Connected</span>
+          </div>
+          <div id="th-chat-messages" class="h-72 overflow-y-auto rounded-2xl bg-slate-50 p-4 space-y-3"></div>
+          <div class="flex gap-2">
+            <input
+              id="th-chat-input"
+              onkeydown="if(event.key==='Enter') sendSyncedMessage('therapist')"
+              placeholder="Write a clinical follow-up message as Dr. Ananya Sharma..."
+              class="flex-1 rounded-xl border border-slate-300 px-4 py-2.5 text-xs focus:border-teal-600 focus:outline-none"
+            />
+            <button onclick="sendSyncedMessage('therapist')" class="rounded-xl bg-teal-700 px-5 py-2.5 text-xs font-bold text-white hover:bg-teal-800">
+              Send Message
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- VIEW 4: CLIENT CARE PORTAL (AARAV VERMA)                              -->
+  <!-- ===================================================================== -->
+  <main id="view-client" class="hidden flex-1 mx-auto max-w-6xl w-full px-4 py-8 sm:px-6 space-y-6">
+    <!-- Client Portal Top Banner -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div>
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="rounded-full bg-sky-50 border border-sky-200 px-3 py-0.5 text-xs font-bold text-sky-800">
+            Client Care Portal • Aarav Verma
+          </span>
+          <span id="cl-pkg-balance-pill" class="rounded-full bg-teal-50 border border-teal-200 px-3 py-0.5 text-xs font-bold text-teal-800">
+            Active Package Balance: 4 Sessions Left
+          </span>
+        </div>
+        <h1 class="mt-2 text-xl sm:text-2xl font-extrabold text-slate-900">Welcome back, Aarav Verma</h1>
+        <p class="text-xs text-slate-500">
+          Assigned Practitioner: <strong id="cl-assigned-therapist" class="text-slate-800">Dr. Ananya Sharma (/dr-sharma)</strong>
+        </p>
+      </div>
+      <button
+        onclick="switchMainView('public')"
+        class="rounded-xl bg-teal-700 px-5 py-2.5 text-xs font-extrabold text-white shadow-sm hover:bg-teal-800 transition shrink-0"
+      >
+        + Book New Session Slot
+      </button>
+    </div>
+
+    <div class="grid gap-6 md:grid-cols-2">
+      <!-- 1. Client Appointments List -->
+      <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-base font-bold text-slate-900">My Booked & Past Appointments</h2>
+          <span class="text-[11px] font-semibold text-slate-400">Live Synced</span>
+        </div>
+        <div id="cl-appointments-list" class="space-y-3"></div>
+      </div>
+
+      <!-- 2. Shared-Only Session Notes (Zero-Leak Privacy Proof) -->
+      <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h2 class="text-base font-bold text-slate-900">Shared Session Notes & Homework</h2>
+          <span class="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-800">
+            Zero-Leak Privacy Filter Active
+          </span>
+        </div>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          Only notes explicitly marked <code class="font-bold text-teal-700">shared</code> are returned here. Currently hiding <strong id="cl-hidden-count" class="text-rose-700">1 private clinical note(s)</strong> written by your therapist.
+        </p>
+        <div id="cl-shared-notes-container" class="space-y-3"></div>
+      </div>
+
+      <!-- 3. Intake Form & Auditable Digital Consent -->
+      <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-base font-bold text-slate-900">Clinical Intake & Digital Consent</h2>
+          <span id="cl-consent-status" class="rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800">
+            Signed ✓
+          </span>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700">Presenting Concern & Therapy Goals</label>
+          <textarea
+            id="cl-intake-concern"
+            rows="2"
+            class="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs"
+          >Experiencing high workplace sprint anxiety, Sunday-night insomnia, and difficulty disconnecting from work messages.</textarea>
+        </div>
+        <label class="flex items-start gap-2.5 rounded-xl border border-teal-200 bg-teal-50/60 p-3 text-xs text-slate-800 cursor-pointer">
+          <input type="checkbox" id="cl-consent-checkbox" checked class="mt-0.5 h-4 w-4 rounded text-teal-700" />
+          <span>
+            <strong>Informed Telehealth Consent (India Tele-MANAS Compliant):</strong> I consent to confidential psychotherapy sessions and understand emergency protocol boundaries.
+          </span>
+        </label>
+        <button
+          onclick="saveClientIntakeConsent()"
+          class="rounded-xl bg-teal-700 px-5 py-2.5 text-xs font-bold text-white hover:bg-teal-800"
+        >
+          Update Intake & Record Consent Timestamp
+        </button>
+      </div>
+
+      <!-- 4. Client Real-Time Care Chat -->
+      <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-base font-bold text-slate-900">Direct Care Chat with Therapist</h2>
+          <span class="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">Online</span>
+        </div>
+        <div id="cl-chat-messages" class="h-52 overflow-y-auto rounded-2xl bg-slate-50 p-3.5 space-y-2.5"></div>
+        <div class="flex gap-2">
+          <input
+            id="cl-chat-input"
+            onkeydown="if(event.key==='Enter') sendSyncedMessage('client')"
+            placeholder="Message Dr. Sharma as Aarav Verma..."
+            class="flex-1 rounded-xl border border-slate-300 px-3.5 py-2 text-xs focus:border-teal-600 focus:outline-none"
+          />
+          <button
+            onclick="sendSyncedMessage('client')"
+            class="rounded-xl bg-teal-700 px-4 py-2 text-xs font-bold text-white hover:bg-teal-800"
+          >
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- SHARED PERSISTENT STATE & BUSINESS LOGIC                              -->
+  <!-- ===================================================================== -->
+  <script>
+    const STORAGE_KEY = 'unfazed_saas_persistent_state_v2';
+
+    const DEFAULT_TIER_CONFIGS = {
+      STARTER: {
+        tierKey: 'STARTER',
+        name: 'Starter Practice',
+        priceINR: 0,
+        maxClients: 5,
+        templates: ['FREEFORM', 'SOAP'],
+        packagesAllowed: false,
+        advancedAnalytics: false
+      },
+      PRO: {
+        tierKey: 'PRO',
+        name: 'Pro Practitioner',
+        priceINR: 1999,
+        maxClients: 50,
+        templates: ['FREEFORM', 'SOAP', 'DAP', 'BIRP'],
+        packagesAllowed: true,
+        advancedAnalytics: true
+      },
+      CLINIC: {
+        tierKey: 'CLINIC',
+        name: 'Unfazed Clinic Unlimited',
+        priceINR: 4999,
+        maxClients: 9999,
+        templates: ['FREEFORM', 'SOAP', 'DAP', 'BIRP'],
+        packagesAllowed: true,
+        advancedAnalytics: true
+      }
+    };
+
+    const INITIAL_STATE = {
+      therapist: {
+        name: 'Dr. Ananya Sharma',
+        slug: 'dr-sharma',
+        title: 'Senior Clinical Psychologist (M.Phil NIMHANS, RCI Licensed)',
+        photoUrl: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&w=400&q=80',
+        bio: 'Over 9 years of clinical experience in Cognitive Behavioral Therapy (CBT), Acceptance & Commitment Therapy (ACT), and trauma-informed mindfulness for young adults and working professionals across India.',
+        specializations: ['Anxiety & Panic', 'Workplace Burnout', 'Relationship Counseling', 'Trauma & PTSD'],
+        languages: ['English', 'Hindi', 'Marathi'],
+        sessionDuration: 60,
+        bufferMinutes: 15,
+        tier: 'PRO'
+      },
+      billing: {
+        clinicName: 'Ananya Sharma MindCare Practice',
+        email: 'billing@drsharma.in',
+        gstin: '29AABCU9603R1ZJ',
+        paymentMethod: 'UPI AutoPay (drsharma@okicici) • Visa •••• 4242',
+        address: 'Indiranagar 100 Feet Road, Bengaluru, Karnataka 560038'
+      },
+      tierConfigs: JSON.parse(JSON.stringify(DEFAULT_TIER_CONFIGS)),
+      selectedServiceIdx: 0,
+      selectedSlot: '',
+      activeTemplate: 'SOAP',
+      clientPackageCredits: 4,
+      blockedDates: [
+        { date: '2026-10-30', reason: 'NIMHANS Clinical Symposium' }
+      ],
+      services: [
+        { name: 'Individual Psychotherapy (60 min)', duration: 60, price: 1800, desc: 'Standard 1-on-1 confidential video therapy session.' },
+        { name: 'Focused Check-In Session (45 min)', duration: 45, price: 1400, desc: 'Follow-up cognitive behavioral check-in for ongoing clients.' },
+        { name: 'Couples & Relationship Session (90 min)', duration: 90, price: 2800, desc: 'Extended joint relationship communication & conflict resolution.' }
+      ],
+      packages: [
+        { id: 'pkg3', name: '3-Session Anxiety Relief Starter', sessions: 3, price: 4860, discount: 10 },
+        { id: 'pkg6', name: '6-Session Burnout Recovery Plan', sessions: 6, price: 9180, discount: 15 },
+        { id: 'pkg12', name: '12-Session Comprehensive Care Bundle', sessions: 12, price: 17280, discount: 20 }
+      ],
+      clients: [
+        { id: 'c1', name: 'Aarav Verma', email: 'aarav@client.demo', tags: ['CBT', 'Workplace Burnout'], status: 'ACTIVE' },
+        { id: 'c2', name: 'Priya Nair', email: 'priya@client.demo', tags: ['Mindfulness', 'Relocation'], status: 'ACTIVE' },
+        { id: 'c3', name: 'Rohan Desai', email: 'rohan@client.demo', tags: ['Academic Stress'], status: 'ACTIVE' },
+        { id: 'c4', name: 'Meera Iyer', email: 'meera@client.demo', tags: ['ACT', 'Sleep'], status: 'ACTIVE' }
+      ],
+      sessions: [
+        { id: 's1', clientName: 'Aarav Verma', serviceName: 'Individual Psychotherapy (60 min)', date: '2026-10-26', slot: '10:00', status: 'CONFIRMED', paymentStatus: 'PAID', price: 1800 },
+        { id: 's2', clientName: 'Priya Nair', serviceName: 'Focused Check-In Session (45 min)', date: '2026-10-26', slot: '14:00', status: 'CONFIRMED', paymentStatus: 'PAID', price: 1400 },
+        { id: 's3', clientName: 'Aarav Verma', serviceName: 'Individual Psychotherapy (60 min)', date: '2026-10-20', slot: '11:15', status: 'COMPLETED', paymentStatus: 'PACKAGE_REDEEMED', price: 1800 }
+      ],
+      notes: [
+        {
+          id: 'n1',
+          clientName: 'Aarav Verma',
+          title: 'CONFIDENTIAL SOAP Clinical Formulation — Session #1',
+          noteType: 'private',
+          templateType: 'SOAP',
+          content: '<p><strong>Subjective:</strong> Client reported acute Sunday evening anticipatory anxiety regarding sprint deadlines.</p><p><strong>Assessment:</strong> High perfectionism schemas triggering sympathetic activation. <em>(STRICTLY PRIVATE THERAPIST NOTE — NEVER VISIBLE IN CLIENT PORTAL)</em></p>'
+        },
+        {
+          id: 'n2',
+          clientName: 'Aarav Verma',
+          title: 'Shared Session Homework & Grounding Toolkit — Session #1',
+          noteType: 'shared',
+          templateType: 'SOAP',
+          content: '<p><strong>Key Takeaways for Aarav:</strong></p><ul><li>Practice the <strong>4-7-8 breathing exercise</strong> for 3 minutes after shutting down your laptop at 7:30 PM.</li><li>Log any catastrophic thoughts in your 3-column worksheet.</li></ul>'
+        }
+      ],
+      payments: [
+        { id: 'INV-2026-100101', client: 'Aarav Verma', desc: 'Individual Psychotherapy (60 min)', gross: 1800, fee: 90, net: 1710 },
+        { id: 'INV-2026-100102', client: 'Aarav Verma', desc: '6-Session Burnout Recovery Plan', gross: 9180, fee: 459, net: 8721 },
+        { id: 'INV-2026-100103', client: 'Priya Nair', desc: 'Focused Check-In Session (45 min)', gross: 1400, fee: 70, net: 1330 }
+      ],
+      messages: [
+        { sender: 'therapist', text: 'Hi Aarav, I have shared your session summary and evening 4-7-8 breathing toolkit in your Shared Notes tab.', time: '10:15 AM' },
+        { sender: 'client', text: 'Thank you Dr. Sharma! I tried the breathing exercise last night and fell asleep much faster.', time: '10:19 AM' }
+      ]
+    };
+
+    function loadPersistedState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return JSON.parse(JSON.stringify(INITIAL_STATE));
+        const parsed = JSON.parse(raw);
+        return {
+          ...JSON.parse(JSON.stringify(INITIAL_STATE)),
+          ...parsed,
+          therapist: { ...INITIAL_STATE.therapist, ...(parsed.therapist || {}) },
+          billing: { ...INITIAL_STATE.billing, ...(parsed.billing || {}) },
+          tierConfigs: { ...JSON.parse(JSON.stringify(DEFAULT_TIER_CONFIGS)), ...(parsed.tierConfigs || {}) }
+        };
+      } catch (e) {
+        return JSON.parse(JSON.stringify(INITIAL_STATE));
+      }
+    }
+
+    let appState = loadPersistedState();
+
+    function persistState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      } catch (e) {}
+    }
+
+    function resetToDefaultDemo() {
+      localStorage.removeItem(STORAGE_KEY);
+      appState = JSON.parse(JSON.stringify(INITIAL_STATE));
+      syncInputFormsFromState();
+      populateTierEditorForm();
+      renderAllViews();
+      triggerToast('Demo Reset Complete', 'Restored default therapist profile, subscription tiers, and demo data.');
+    }
+
+    const BASE_DAILY_SLOTS = ['10:00', '11:15', '12:30', '14:00', '15:15', '16:30'];
+
+    // Centralized Entitlement Authority: canAccess(therapistId, featureKey)
+    function canAccess(featureKey, context = {}) {
+      const cfg = appState.tierConfigs[appState.therapist.tier] || appState.tierConfigs.PRO;
+      if (featureKey === 'ADD_ACTIVE_CLIENT') {
+        const allowed = appState.clients.length < cfg.maxClients;
+        return {
+          allowed,
+          current: appState.clients.length,
+          limit: cfg.maxClients,
+          reason: `Your ${cfg.name} (${appState.therapist.tier}) plan caps active clients at ${cfg.maxClients} (currently ${appState.clients.length}). Upgrade your plan or increase the cap in 'Subscription & Plan Admin'!`
+        };
+      }
+      if (featureKey === 'NOTE_TEMPLATE') {
+        const allowed = cfg.templates.includes(context.template);
+        return {
+          allowed,
+          reason: `The '${context.template}' clinical template is not enabled on ${cfg.name}. Allowed: ${cfg.templates.join(', ')}. You can customize this in 'Subscription & Plan Admin'.`
+        };
+      }
+      if (featureKey === 'SESSION_PACKAGES') {
+        return {
+          allowed: cfg.packagesAllowed,
+          reason: `Creating custom multi-session bundles is disabled on ${cfg.name}. Enable it in 'Subscription & Plan Admin' or switch to PRO.`
+        };
+      }
+      if (featureKey === 'ADVANCED_ANALYTICS') {
+        return {
+          allowed: cfg.advancedAnalytics,
+          reason: `Service cohort analytics are disabled on ${cfg.name}. Switch to PRO or enable them in 'Subscription & Plan Admin'.`
+        };
+      }
+      return { allowed: true };
+    }
+
+    function triggerToast(title, message) {
+      const box = document.getElementById('toast-box');
+      document.getElementById('toast-title').textContent = title;
+      document.getElementById('toast-message').textContent = message;
+      box.classList.remove('hidden');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => box.classList.add('hidden'), 4200);
+    }
+
+    function switchMainView(viewName) {
+      ['landing', 'public', 'therapist', 'client'].forEach(v => {
+        document.getElementById(`view-${v}`).classList.toggle('hidden', v !== viewName);
+        const btn = document.getElementById(`nav-btn-${v}`);
+        if (v === viewName) {
+          btn.className = 'rounded-full px-3.5 py-1.5 text-xs sm:text-sm font-semibold transition bg-neutral-900 text-white shadow-sm';
+        } else {
+          btn.className = 'rounded-full px-3.5 py-1.5 text-xs sm:text-sm font-medium transition text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100';
+        }
+      });
+      renderAllViews();
+    }
+
+    function switchTherapistTab(tabName) {
+      ['overview', 'profile', 'subscription', 'clients', 'schedule', 'notes', 'payments', 'chat'].forEach(t => {
+        const panel = document.getElementById(`th-panel-${t}`);
+        if (panel) panel.classList.toggle('hidden', t !== tabName);
+        const navBtn = document.getElementById(`th-nav-${t}`);
+        if (navBtn) {
+          if (t === tabName) {
+            navBtn.className = 'w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 text-left text-xs font-semibold bg-neutral-900 text-white shadow-sm';
+          } else {
+            navBtn.className = 'w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 text-left text-xs font-medium text-neutral-600 hover:bg-neutral-100';
+          }
+        }
+      });
+      renderAllViews();
+    }
+
+    function setSubscriptionTier(tierKey) {
+      appState.therapist.tier = tierKey;
+      persistState();
+      ['STARTER', 'PRO', 'CLINIC'].forEach(k => {
+        const b = document.getElementById(`tier-btn-${k}`);
+        if (b) {
+          b.className = k === tierKey
+            ? 'rounded-full px-4 py-1.5 text-xs font-semibold bg-neutral-900 text-white shadow-sm transition'
+            : 'rounded-full px-4 py-1.5 text-xs font-semibold border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-100 transition';
+        }
+      });
+      const selector = document.getElementById('sub-edit-tier-selector');
+      if (selector) {
+        selector.value = tierKey;
+        populateTierEditorForm();
+      }
+      const cfg = appState.tierConfigs[tierKey];
+      triggerToast('Active Subscription Changed', `Switched practice to ${cfg.name} (₹${cfg.priceINR}/mo). All limits & entitlements updated live.`);
+      renderAllViews();
+    }
+
+    // -----------------------------------------------------------------------
+    // SUBSCRIPTION & BILLING CUSTOMIZER LOGIC
+    // -----------------------------------------------------------------------
+    function populateTierEditorForm() {
+      const tierKey = document.getElementById('sub-edit-tier-selector')?.value || 'PRO';
+      const cfg = appState.tierConfigs[tierKey];
+      if (!cfg) return;
+      document.getElementById('sub-edit-name').value = cfg.name;
+      document.getElementById('sub-edit-price').value = cfg.priceINR;
+      document.getElementById('sub-edit-max-clients').value = cfg.maxClients;
+      document.getElementById('sub-edit-templates').value = (cfg.templates || []).join(', ');
+      document.getElementById('sub-edit-pkg-flag').checked = Boolean(cfg.packagesAllowed);
+      document.getElementById('sub-edit-adv-flag').checked = Boolean(cfg.advancedAnalytics);
+    }
+
+    function saveSubscriptionTierConfig() {
+      const tierKey = document.getElementById('sub-edit-tier-selector').value;
+      const name = document.getElementById('sub-edit-name').value.trim() || tierKey;
+      const priceINR = Math.max(0, Number(document.getElementById('sub-edit-price').value || 0));
+      const maxClients = Math.max(1, Number(document.getElementById('sub-edit-max-clients').value || 5));
+      const templates = document.getElementById('sub-edit-templates').value
+        .split(',')
+        .map(s => s.trim().toUpperCase())
+        .filter(Boolean);
+      const packagesAllowed = document.getElementById('sub-edit-pkg-flag').checked;
+      const advancedAnalytics = document.getElementById('sub-edit-adv-flag').checked;
+
+      appState.tierConfigs[tierKey] = {
+        tierKey,
+        name,
+        priceINR,
+        maxClients,
+        templates: templates.length ? templates : ['FREEFORM', 'SOAP'],
+        packagesAllowed,
+        advancedAnalytics
+      };
+
+      persistState();
+      renderAllViews();
+      triggerToast(
+        'Subscription Plan Updated',
+        `Saved custom settings for ${name} (₹${priceINR}/mo, ${maxClients} client cap). Synced to Landing Page & Entitlement Engine!`
+      );
+    }
+
+    function saveBillingDetails() {
+      appState.billing = {
+        clinicName: document.getElementById('bill-clinic-name').value.trim(),
+        email: document.getElementById('bill-email').value.trim(),
+        gstin: document.getElementById('bill-gstin').value.trim(),
+        paymentMethod: document.getElementById('bill-payment-method').value.trim(),
+        address: document.getElementById('bill-address').value.trim()
+      };
+      persistState();
+      renderAllViews();
+      triggerToast('Billing Profile Updated', `Saved GSTIN (${appState.billing.gstin}) and billing details for ${appState.billing.clinicName}.`);
+    }
+
+    function syncInputFormsFromState() {
+      const t = appState.therapist;
+      const b = appState.billing;
+      if (document.getElementById('inp-prof-name')) {
+        document.getElementById('inp-prof-name').value = t.name;
+        document.getElementById('inp-prof-slug').value = t.slug;
+        document.getElementById('inp-prof-title').value = t.title;
+        document.getElementById('inp-prof-photo').value = t.photoUrl || '';
+        document.getElementById('inp-prof-bio').value = t.bio;
+        document.getElementById('inp-prof-specs').value = (t.specializations || []).join(', ');
+        document.getElementById('inp-prof-langs').value = (t.languages || []).join(', ');
+      }
+      if (document.getElementById('bill-clinic-name')) {
+        document.getElementById('bill-clinic-name').value = b.clinicName;
+        document.getElementById('bill-email').value = b.email;
+        document.getElementById('bill-gstin').value = b.gstin;
+        document.getElementById('bill-payment-method').value = b.paymentMethod;
+        document.getElementById('bill-address').value = b.address;
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // SERVICES MANAGER (ADD / UPDATE PRICE / DELETE)
+    // -----------------------------------------------------------------------
+    function addConsultationService() {
+      const name = document.getElementById('srv-new-name').value.trim();
+      const duration = Number(document.getElementById('srv-new-duration').value || 60);
+      const price = Number(document.getElementById('srv-new-price').value || 1500);
+      if (!name) {
+        triggerToast('Service Name Required', 'Please enter a title for the new consultation service.');
+        return;
+      }
+      appState.services.push({
+        name: `${name} (${duration} min)`,
+        duration,
+        price,
+        desc: `Custom ${duration}-minute clinical consultation session.`
+      });
+      document.getElementById('srv-new-name').value = '';
+      persistState();
+      renderAllViews();
+      triggerToast('Service Added', `Published ${name} (₹${price}) to your public booking page.`);
+    }
+
+    function updateServicePrice(idx, newPrice) {
+      const val = Number(newPrice);
+      if (val >= 0 && appState.services[idx]) {
+        appState.services[idx].price = val;
+        persistState();
+        renderAllViews();
+        triggerToast('Service Fee Updated', `Updated ${appState.services[idx].name} to ₹${val}.`);
+      }
+    }
+
+    function removeConsultationService(idx) {
+      if (appState.services.length <= 1) {
+        triggerToast('Minimum 1 Service Required', 'Your booking page must have at least one active consultation service.');
+        return;
+      }
+      const removed = appState.services.splice(idx, 1)[0];
+      appState.selectedServiceIdx = 0;
+      persistState();
+      renderAllViews();
+      triggerToast('Service Removed', `Removed ${removed.name} from your booking page.`);
+    }
+
+    // -----------------------------------------------------------------------
+    // PUBLIC BOOKING PAGE LOGIC
+    // -----------------------------------------------------------------------
+    function selectConsultationService(idx) {
+      appState.selectedServiceIdx = idx;
+      renderAllViews();
+    }
+
+    function selectTimeSlot(slotStr) {
+      appState.selectedSlot = slotStr;
+      renderPublicSlots();
+    }
+
+    function renderPublicSlots() {
+      const dateStr = document.getElementById('pub-date-picker').value || '2026-10-26';
+      const slotsContainer = document.getElementById('pub-slots-container');
+      const summaryEl = document.getElementById('pub-booking-summary');
+      const srv = appState.services[appState.selectedServiceIdx];
+
+      // Check if entire date is blocked by therapist override
+      const blockedOverride = appState.blockedDates.find(b => b.date === dateStr);
+      if (blockedOverride) {
+        slotsContainer.innerHTML = `
+          <div class="col-span-full rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs font-bold text-rose-800">
+            Date Blocked by Practitioner (${blockedOverride.reason}). Please select another date.
+          </div>
+        `;
+        summaryEl.textContent = 'Date unavailable';
+        return;
+      }
+
+      const bookedOnDate = appState.sessions
+        .filter(s => s.date === dateStr && s.status !== 'CANCELLED')
+        .map(s => s.slot);
+
+      slotsContainer.innerHTML = BASE_DAILY_SLOTS.map(slot => {
+        const isTaken = bookedOnDate.includes(slot);
+        const isSelected = appState.selectedSlot === slot;
+        if (isTaken) {
+          return `
+            <button disabled class="rounded-xl border border-slate-200 bg-slate-100 py-2.5 px-3 text-xs font-bold text-slate-400 line-through cursor-not-allowed">
+              ${slot} IST (Booked)
+            </button>
+          `;
+        }
+        return `
+          <button
+            onclick="selectTimeSlot('${slot}')"
+            class="rounded-xl border py-2.5 px-3 text-xs font-bold transition ${
+              isSelected
+                ? 'border-teal-700 bg-teal-700 text-white shadow-sm'
+                : 'border-slate-300 bg-white text-slate-800 hover:border-teal-600 hover:bg-teal-50/50'
+            }"
+          >
+            ${slot} IST (${srv.duration}m)
+          </button>
+        `;
+      }).join('');
+
+      summaryEl.textContent = appState.selectedSlot
+        ? `${dateStr} at ${appState.selectedSlot} IST • ${srv.name} (₹${srv.price})`
+        : 'Select an available time slot above';
+    }
+
+    function confirmPublicAppointment() {
+      const dateStr = document.getElementById('pub-date-picker').value;
+      const payMethod = document.getElementById('pub-payment-method').value;
+      if (!appState.selectedSlot) {
+        triggerToast('Slot Required', 'Please click an available IST time slot before confirming.');
+        return;
+      }
+
+      // Atomic double-booking check
+      const existing = appState.sessions.find(
+        s => s.date === dateStr && s.slot === appState.selectedSlot && s.status !== 'CANCELLED'
+      );
+      if (existing) {
+        triggerToast('409 Conflict — Double Booking Prevented', 'That slot is already locked by another booking.');
+        return;
+      }
+
+      const srv = appState.services[appState.selectedServiceIdx];
+      let paymentStatus = 'PAID';
+
+      if (payMethod === 'REDEEM_PACKAGE') {
+        if (appState.clientPackageCredits <= 0) {
+          triggerToast('Package Exhausted', 'You have 0 remaining package credits. Please purchase a bundle or use Razorpay Mock Checkout.');
+          return;
+        }
+        appState.clientPackageCredits -= 1;
+        paymentStatus = 'PACKAGE_REDEEMED';
+      } else {
+        const fee = Math.round(srv.price * 0.05);
+        appState.payments.unshift({
+          id: 'INV-2026-' + Math.floor(100000 + Math.random() * 899999),
+          client: 'Aarav Verma',
+          desc: `${srv.name} (${dateStr} at ${appState.selectedSlot})`,
+          gross: srv.price,
+          fee,
+          net: srv.price - fee
+        });
+      }
+
+      const bookedSlot = appState.selectedSlot;
+      appState.sessions.unshift({
+        id: 'sess_' + Date.now(),
+        clientName: 'Aarav Verma',
+        serviceName: srv.name,
+        date: dateStr,
+        slot: bookedSlot,
+        status: 'CONFIRMED',
+        paymentStatus,
+        price: srv.price
+      });
+
+      appState.selectedSlot = '';
+      persistState();
+      triggerToast(
+        'Appointment Confirmed & Slot Locked',
+        `Booked ${srv.name} on ${dateStr} at ${bookedSlot} IST. Synced to Therapist Dashboard & Client Portal!`
+      );
+      renderAllViews();
+    }
+
+    function purchasePackageBundle(pkgId) {
+      const pkg = appState.packages.find(p => p.id === pkgId);
+      if (!pkg) return;
+      const fee = Math.round(pkg.price * 0.05);
+      appState.payments.unshift({
+        id: 'INV-2026-' + Math.floor(100000 + Math.random() * 899999),
+        client: 'Aarav Verma',
+        desc: `${pkg.name} (${pkg.sessions} Sessions Bundle)`,
+        gross: pkg.price,
+        fee,
+        net: pkg.price - fee
+      });
+      appState.clientPackageCredits += pkg.sessions;
+      persistState();
+      triggerToast(
+        'Package Bundle Purchased',
+        `Added ${pkg.sessions} session credits to Aarav Verma’s balance (Total: ${appState.clientPackageCredits} credits). Invoice generated!`
+      );
+      renderAllViews();
+    }
+
+    // -----------------------------------------------------------------------
+    // THERAPIST DASHBOARD ACTIONS
+    // -----------------------------------------------------------------------
+    function setAppointmentStatus(sessionId, newStatus) {
+      const target = appState.sessions.find(s => s.id === sessionId);
+      if (target) {
+        target.status = newStatus;
+        persistState();
+        triggerToast('Status Updated', `Appointment on ${target.date} (${target.slot}) marked as ${newStatus}.`);
+        renderAllViews();
+      }
+    }
+
+    function saveTherapistProfile() {
+      appState.therapist.name = document.getElementById('inp-prof-name').value.trim() || 'Dr. Ananya Sharma';
+      appState.therapist.slug = document.getElementById('inp-prof-slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '') || 'dr-sharma';
+      appState.therapist.title = document.getElementById('inp-prof-title').value.trim();
+      appState.therapist.photoUrl = document.getElementById('inp-prof-photo').value.trim();
+      appState.therapist.bio = document.getElementById('inp-prof-bio').value.trim();
+      appState.therapist.specializations = document.getElementById('inp-prof-specs').value.split(',').map(s => s.trim()).filter(Boolean);
+      appState.therapist.languages = document.getElementById('inp-prof-langs').value.split(',').map(s => s.trim()).filter(Boolean);
+
+      persistState();
+      triggerToast('Branded Profile Saved', `Public booking page updated & persisted at /${appState.therapist.slug}`);
+      renderAllViews();
+    }
+
+    function addCrmClient() {
+      const check = canAccess('ADD_ACTIVE_CLIENT');
+      if (!check.allowed) {
+        triggerToast('403 Subscription Limit Reached', check.reason);
+        return;
+      }
+      const name = document.getElementById('crm-new-name').value.trim();
+      const email = document.getElementById('crm-new-email').value.trim();
+      const tags = document.getElementById('crm-new-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+      if (!name || !email) {
+        triggerToast('Validation Error', 'Please provide both client name and email address.');
+        return;
+      }
+      appState.clients.unshift({
+        id: 'c_' + Date.now(),
+        name,
+        email,
+        tags: tags.length ? tags : ['New Intake'],
+        status: 'ACTIVE'
+      });
+      document.getElementById('crm-new-name').value = '';
+      document.getElementById('crm-new-email').value = '';
+      document.getElementById('crm-new-tags').value = '';
+      persistState();
+      triggerToast('Client Added to CRM', `${name} added (${appState.clients.length}/${check.limit} active client cap).`);
+      renderAllViews();
+    }
+
+    function addBlockedDateOverride() {
+      const d = document.getElementById('avail-block-date').value;
+      const r = document.getElementById('avail-block-reason').value.trim() || 'Clinic Holiday';
+      if (!d) return;
+      appState.blockedDates.push({ date: d, reason: r });
+      document.getElementById('avail-block-reason').value = '';
+      persistState();
+      triggerToast('Date Override Added', `Blocked ${d} (${r}) on your public calendar.`);
+      renderAllViews();
+    }
+
+    function saveAvailabilitySettings() {
+      appState.therapist.sessionDuration = Number(document.getElementById('avail-duration').value);
+      appState.therapist.bufferMinutes = Number(document.getElementById('avail-buffer').value);
+      persistState();
+      triggerToast('Schedule Rules Saved', `Updated default session duration to ${appState.therapist.sessionDuration}m with ${appState.therapist.bufferMinutes}m buffer.`);
+      renderAllViews();
+    }
+
+    function applyNoteTemplate(tplName) {
+      const check = canAccess('NOTE_TEMPLATE', { template: tplName });
+      if (!check.allowed) {
+        triggerToast('403 Template Restricted by Tier', check.reason);
+        return;
+      }
+      appState.activeTemplate = tplName;
+      document.getElementById('active-template-badge').textContent = `Template: ${tplName}`;
+      const editor = document.getElementById('note-rich-editor');
+      if (tplName === 'SOAP') {
+        editor.innerHTML = '<p><strong>Subjective:</strong> Client reported...</p><p><strong>Objective:</strong> Affect and mental status...</p><p><strong>Assessment:</strong> Clinical formulation...</p><p><strong>Plan:</strong> Next session interventions...</p>';
+      } else if (tplName === 'DAP') {
+        editor.innerHTML = '<p><strong>Data:</strong> Client narrative & observations...</p><p><strong>Assessment:</strong> Progress toward treatment goals...</p><p><strong>Plan:</strong> Homework & next steps...</p>';
+      } else {
+        editor.innerHTML = '<p>Freeform clinical session notes...</p>';
+      }
+      triggerToast('Template Applied', `Loaded ${tplName} structure into the clinical editor.`);
+    }
+
+    function saveTherapistNote() {
+      const check = canAccess('NOTE_TEMPLATE', { template: appState.activeTemplate });
+      if (!check.allowed) {
+        triggerToast('403 Template Restricted', check.reason);
+        return;
+      }
+      const clientName = document.getElementById('note-client-select').value || 'Aarav Verma';
+      const title = document.getElementById('note-title-input').value.trim() || `${appState.activeTemplate} Session Note`;
+      const noteType = document.getElementById('note-privacy-select').value;
+      const content = document.getElementById('note-rich-editor').innerHTML;
+
+      appState.notes.unshift({
+        id: 'note_' + Date.now(),
+        clientName,
+        title,
+        noteType,
+        templateType: appState.activeTemplate,
+        content
+      });
+
+      document.getElementById('note-title-input').value = '';
+      persistState();
+      triggerToast(
+        noteType === 'private' ? 'Saved Private Clinical Note' : 'Saved Shared Client Note',
+        noteType === 'private'
+          ? 'Strictly confidential. Excluded from all Client Portal queries.'
+          : 'Shared note is now immediately visible in Aarav Verma’s Client Portal!'
+      );
+      renderAllViews();
+    }
+
+    function createNewPackageBundle() {
+      const check = canAccess('SESSION_PACKAGES');
+      if (!check.allowed) {
+        triggerToast('403 Feature Restricted', check.reason);
+        return;
+      }
+      const name = document.getElementById('pkg-new-name').value.trim();
+      const sessions = Number(document.getElementById('pkg-new-count').value);
+      const price = Number(document.getElementById('pkg-new-price').value);
+      if (!name || !price) {
+        triggerToast('Missing Fields', 'Please enter a bundle title and price in INR.');
+        return;
+      }
+      appState.packages.push({
+        id: 'pkg_' + Date.now(),
+        name,
+        sessions,
+        price,
+        discount: sessions === 12 ? 20 : sessions === 6 ? 15 : 10
+      });
+      document.getElementById('pkg-new-name').value = '';
+      persistState();
+      triggerToast('Package Bundle Created', `${name} (${sessions} sessions) published to /${appState.therapist.slug}.`);
+      renderAllViews();
+    }
+
+    function downloadInvoiceFile(invId, client, desc, gross, fee, net) {
+      const b = appState.billing;
+      const content = [
+        '============================================================',
+        'UNFAZED HEALTHCARE SAAS — OFFICIAL TAX INVOICE / RECEIPT',
+        '============================================================',
+        `Invoice Number : ${invId}`,
+        `Date           : ${new Date().toLocaleDateString('en-IN')}`,
+        `Practice Name  : ${b.clinicName}`,
+        `Practitioner   : ${appState.therapist.name} (/${appState.therapist.slug})`,
+        `Practice GSTIN : ${b.gstin}`,
+        `Clinic Address : ${b.address}`,
+        `Billed To      : ${client}`,
+        '------------------------------------------------------------',
+        `Description    : ${desc}`,
+        `Gross Amount   : INR ${gross}.00`,
+        `Platform Fee   : INR ${fee}.00 (5%)`,
+        `Net Credited   : INR ${net}.00`,
+        `Payment Status : PAID & VERIFIED (HMAC-SHA256)`,
+        '============================================================'
+      ].join('\n');
+
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${invId}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      triggerToast('Invoice Downloaded', `Generated tax receipt ${invId} with GSTIN ${b.gstin}.`);
+    }
+
+    // -----------------------------------------------------------------------
+    // CLIENT PORTAL & CHAT ACTIONS
+    // -----------------------------------------------------------------------
+    function saveClientIntakeConsent() {
+      const checked = document.getElementById('cl-consent-checkbox').checked;
+      if (!checked) {
+        triggerToast('Consent Required', 'Please check the Informed Consent box to sign.');
+        return;
+      }
+      const stamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      document.getElementById('cl-consent-status').textContent = `Signed at ${stamp} IST ✓`;
+      triggerToast('Digital Consent Recorded', `Auditable consent timestamp (${stamp} IST) saved to your clinical record.`);
+    }
+
+    function sendSyncedMessage(senderRole) {
+      const inputId = senderRole === 'therapist' ? 'th-chat-input' : 'cl-chat-input';
+      const inputEl = document.getElementById(inputId);
+      const text = inputEl.value.trim();
+      if (!text) return;
+
+      appState.messages.push({
+        sender: senderRole,
+        text,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
+      inputEl.value = '';
+      persistState();
+      renderAllViews();
+    }
+
+    // -----------------------------------------------------------------------
+    // MASTER RENDER FUNCTION (SYNCHRONIZES ALL 4 VIEWS)
+    // -----------------------------------------------------------------------
+    function renderClientsCrm() {
+      const q = (document.getElementById('crm-search')?.value || '').toLowerCase().trim();
+      const filtered = appState.clients.filter(c =>
+        c.name.toLowerCase().includes(q) ||
+        c.email.toLowerCase().includes(q) ||
+        c.tags.some(t => t.toLowerCase().includes(q))
+      );
+
+      document.getElementById('crm-clients-list').innerHTML = filtered.map(c => `
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl border border-slate-200 p-3.5 text-xs">
+          <div>
+            <p class="font-bold text-slate-900">${c.name}</p>
+            <p class="text-slate-500">${c.email}</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-1.5">
+            ${c.tags.map(t => `<span class="rounded-lg bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold text-slate-700">${t}</span>`).join('')}
+            <span class="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800">${c.status}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderAllViews() {
+      const t = appState.therapist;
+      const tierCfg = appState.tierConfigs[t.tier] || appState.tierConfigs.PRO;
+
+      // Render Dynamic Landing Page Pricing Cards from live appState.tierConfigs
+      const landingGrid = document.getElementById('landing-pricing-grid');
+      if (landingGrid) {
+        landingGrid.innerHTML = ['STARTER', 'PRO', 'CLINIC'].map(k => {
+          const c = appState.tierConfigs[k];
+          const isCurrent = t.tier === k;
+          return `
+            <div class="rounded-2xl border p-6 shadow-sm flex flex-col justify-between ${
+              isCurrent ? 'border-2 border-teal-600 bg-teal-900 text-white shadow-lg' : 'border-slate-200 bg-white text-slate-900'
+            }">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold uppercase ${isCurrent ? 'text-teal-300' : 'text-teal-700'}">${c.tierKey}</span>
+                  ${isCurrent ? '<span class="rounded-full bg-teal-700 px-2.5 py-0.5 text-[10px] font-bold text-teal-100">Active Plan</span>' : ''}
+                </div>
+                <h3 class="mt-1 text-lg font-bold">${c.name}</h3>
+                <p class="mt-2 text-3xl font-extrabold">₹${c.priceINR.toLocaleString('en-IN')} <span class="text-xs font-normal ${isCurrent ? 'text-teal-200' : 'text-slate-500'}">/ month</span></p>
+                <ul class="mt-5 space-y-2 text-xs ${isCurrent ? 'text-teal-100' : 'text-slate-600'}">
+                  <li>✓ Up to <strong>${c.maxClients} Active Clients</strong></li>
+                  <li>✓ Templates: <strong>${c.templates.join(', ')}</strong></li>
+                  <li>✓ Session Packages: <strong>${c.packagesAllowed ? 'Included' : 'Not Included'}</strong></li>
+                  <li>✓ Analytics: <strong>${c.advancedAnalytics ? 'Advanced Cohort & Revenue' : 'Basic KPIs'}</strong></li>
+                </ul>
+              </div>
+              <button
+                onclick="setSubscriptionTier('${k}'); switchMainView('therapist')"
+                class="mt-6 w-full rounded-xl py-2.5 text-xs font-extrabold transition ${
+                  isCurrent ? 'bg-white text-teal-950 hover:bg-teal-50' : 'border border-slate-300 text-slate-700 hover:bg-slate-100'
+                }"
+              >
+                ${isCurrent ? 'Manage Active Plan in Dashboard' : `Switch Practice to ${c.tierKey}`}
+              </button>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Sync Active Subscription Banner in Tab C
+      if (document.getElementById('sub-active-title')) {
+        document.getElementById('sub-active-title').textContent = `${tierCfg.name} (₹${tierCfg.priceINR.toLocaleString('en-IN')}/mo)`;
+        document.getElementById('sub-active-desc').textContent = `Tier Key: ${tierCfg.tierKey} • Max Active Clients: ${tierCfg.maxClients} • Templates: ${tierCfg.templates.join(', ')} • Billing GSTIN: ${appState.billing.gstin}`;
+      }
+
+      // Sync Services Editor List in Tab B
+      const srvEditorList = document.getElementById('th-services-editor-list');
+      if (srvEditorList) {
+        srvEditorList.innerHTML = appState.services.map((srv, idx) => `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl border border-slate-200 p-3 text-xs">
+            <div>
+              <span class="font-bold text-slate-900">${srv.name}</span>
+              <span class="ml-2 text-slate-500">(${srv.duration} mins)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-slate-500 font-semibold">Fee INR:</span>
+              <input
+                type="number"
+                value="${srv.price}"
+                onchange="updateServicePrice(${idx}, this.value)"
+                class="w-24 rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-bold"
+              />
+              <button onclick="removeConsultationService(${idx})" class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-bold text-rose-700 hover:bg-rose-100">
+                Remove
+              </button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Sync Nav & Public Profile Header
+      document.getElementById('nav-slug-label').textContent = `2. Public Link (/${t.slug})`;
+      document.getElementById('pub-badge-slug').textContent = `Verified Unfazed Practice • /${t.slug}`;
+      document.getElementById('pub-therapist-name').textContent = t.name;
+      document.getElementById('pub-therapist-title').textContent = t.title;
+      document.getElementById('pub-therapist-bio').textContent = t.bio;
+      if (t.photoUrl && document.getElementById('pub-therapist-photo')) {
+        document.getElementById('pub-therapist-photo').src = t.photoUrl;
+      }
+      document.getElementById('pub-languages').textContent = `🌐 ${t.languages.join(', ')}`;
+      document.getElementById('pub-buffer-display').textContent = t.bufferMinutes;
+      document.getElementById('pub-specs-list').innerHTML = t.specializations
+        .map(s => `<span class="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">${s}</span>`)
+        .join('');
+
+      // Public Services & Packages
+      document.getElementById('pub-services-container').innerHTML = appState.services.map((srv, idx) => `
+        <div
+          onclick="selectConsultationService(${idx})"
+          class="cursor-pointer rounded-xl border p-4 transition ${
+            appState.selectedServiceIdx === idx
+              ? 'border-teal-600 bg-teal-50/70 ring-2 ring-teal-600'
+              : 'border-slate-200 hover:bg-slate-50'
+          }"
+        >
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-900">${srv.name}</span>
+            <span class="rounded-lg bg-teal-700 px-2.5 py-1 text-xs font-extrabold text-white">₹${srv.price}</span>
+          </div>
+          <p class="mt-1 text-[11px] text-slate-600">${srv.desc}</p>
+        </div>
+      `).join('');
+
+      document.getElementById('pub-packages-container').innerHTML = appState.packages.map(pkg => `
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3.5 flex items-center justify-between gap-2">
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-bold text-slate-900">${pkg.name}</span>
+              <span class="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800">Save ${pkg.discount}%</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-0.5">${pkg.sessions} Sessions Bundle</p>
+          </div>
+          <button
+            onclick="purchasePackageBundle('${pkg.id}')"
+            class="rounded-xl bg-teal-700 px-3.5 py-2 text-xs font-bold text-white hover:bg-teal-800 shrink-0"
+          >
+            Buy ₹${pkg.price}
+          </button>
+        </div>
+      `).join('');
+
+      renderPublicSlots();
+
+      // Therapist Header & KPIs
+      document.getElementById('th-dash-name').textContent = t.name;
+      document.getElementById('th-dash-slug').textContent = t.slug;
+      document.getElementById('th-dash-tier-badge').textContent = `${tierCfg.name} (${t.tier})`;
+      document.getElementById('th-kpi-clients').textContent = `${appState.clients.length} / ${tierCfg.maxClients}`;
+      document.getElementById('th-kpi-clients-sub').textContent = `Allowed on ${t.tier}: ${tierCfg.maxClients} active clients`;
+      document.getElementById('crm-entitlement-pill').textContent = `Active Clients: ${appState.clients.length} / ${tierCfg.maxClients} (${t.tier})`;
+
+      const confirmedCount = appState.sessions.filter(s => s.status === 'CONFIRMED').length;
+      document.getElementById('th-kpi-upcoming').textContent = confirmedCount;
+
+      const totalNetINR = appState.payments.reduce((acc, p) => acc + p.net, 0);
+      const totalGrossINR = appState.payments.reduce((acc, p) => acc + p.gross, 0);
+      document.getElementById('th-kpi-revenue').textContent = `₹${totalNetINR.toLocaleString('en-IN')}`;
+      document.getElementById('th-bar-oct-rev').textContent = `₹${totalGrossINR.toLocaleString('en-IN')}`;
+
+      const noShowCount = appState.sessions.filter(s => s.status === 'NO_SHOW').length;
+      const noShowRate = appState.sessions.length
+        ? Math.round((noShowCount / appState.sessions.length) * 100)
+        : 0;
+      document.getElementById('th-kpi-noshow').textContent = `${noShowRate}%`;
+
+      // Gated Advanced Analytics Box
+      const advCheck = canAccess('ADVANCED_ANALYTICS');
+      const advBox = document.getElementById('th-advanced-analytics-box');
+      if (!advCheck.allowed) {
+        advBox.innerHTML = `
+          <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs font-semibold text-amber-900">
+            🔒 ${advCheck.reason}
+          </div>
+        `;
+      } else {
+        advBox.innerHTML = appState.services.map(srv => {
+          const count = appState.sessions.filter(s => s.serviceName === srv.name).length;
+          return `
+            <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5">
+              <span class="font-semibold text-slate-800">${srv.name}</span>
+              <span class="rounded-full bg-teal-100 px-2.5 py-0.5 font-bold text-teal-800">${count} sessions</span>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Therapist Appointments Table
+      document.getElementById('th-appointments-tbody').innerHTML = appState.sessions.map(s => `
+        <tr>
+          <td class="py-3 font-bold text-slate-900">${s.clientName}</td>
+          <td class="py-3 text-slate-600">${s.serviceName}</td>
+          <td class="py-3 font-semibold text-slate-800">${s.date} • ${s.slot} IST</td>
+          <td class="py-3">
+            <span class="rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
+              s.status === 'CONFIRMED' ? 'bg-teal-50 text-teal-800' :
+              s.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-800' :
+              s.status === 'NO_SHOW' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'
+            }">${s.status}</span>
+          </td>
+          <td class="py-3 text-[11px] font-bold text-slate-600">${s.paymentStatus}</td>
+          <td class="py-3 space-x-1">
+            <button onclick="setAppointmentStatus('${s.id}', 'COMPLETED')" class="rounded-lg bg-emerald-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-emerald-700">Complete</button>
+            <button onclick="setAppointmentStatus('${s.id}', 'NO_SHOW')" class="rounded-lg bg-amber-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-amber-700">No-Show</button>
+            <button onclick="setAppointmentStatus('${s.id}', 'CANCELLED')" class="rounded-lg bg-rose-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-rose-700">Cancel</button>
+          </td>
+        </tr>
+      `).join('');
+
+      renderClientsCrm();
+
+      // Blocked Dates Pills
+      document.getElementById('avail-blocked-pills').innerHTML = appState.blockedDates.map(b => `
+        <span class="rounded-lg bg-rose-50 border border-rose-200 px-3 py-1 text-xs font-bold text-rose-800">
+          Blocked: ${b.date} (${b.reason})
+        </span>
+      `).join('');
+
+      // Populate Client Select in Note Editor
+      document.getElementById('note-client-select').innerHTML = appState.clients
+        .map(c => `<option value="${c.name}">${c.name}</option>`)
+        .join('');
+
+      // Therapist Notes List (Both Private & Shared)
+      document.getElementById('th-notes-container').innerHTML = appState.notes.map(n => `
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="rounded-full px-2.5 py-0.5 text-[10px] font-extrabold ${
+                n.noteType === 'private' ? 'bg-rose-100 text-rose-800' : 'bg-teal-100 text-teal-800'
+              }">
+                ${n.noteType === 'private' ? '🔒 PRIVATE CLINICAL NOTE (HIDDEN FROM CLIENT)' : '🤝 SHARED WITH CLIENT'}
+              </span>
+              <span class="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">${n.templateType}</span>
+              <span class="text-xs font-bold text-slate-600">Client: ${n.clientName}</span>
+            </div>
+          </div>
+          <h4 class="mt-2 text-sm font-bold text-slate-900">${n.title}</h4>
+          <div class="mt-1.5 text-xs text-slate-700 leading-relaxed">${n.content}</div>
+        </div>
+      `).join('');
+
+      // Therapist Payments Table
+      document.getElementById('th-payments-tbody').innerHTML = appState.payments.map(p => `
+        <tr>
+          <td class="py-3 font-bold text-slate-900">${p.id}</td>
+          <td class="py-3 font-medium text-slate-800">${p.client}</td>
+          <td class="py-3 text-slate-600">${p.desc}</td>
+          <td class="py-3 font-semibold">
+            ₹${p.gross} <span class="text-slate-400">(-₹${p.fee} fee)</span> → <span class="text-teal-700 font-bold">Net ₹${p.net}</span>
+          </td>
+          <td class="py-3">
+            <button
+              onclick="downloadInvoiceFile('${p.id}', '${p.client}', '${p.desc}', ${p.gross}, ${p.fee}, ${p.net})"
+              class="rounded-lg bg-slate-900 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-slate-800"
+            >
+              Download PDF/TXT
+            </button>
+          </td>
+        </tr>
+      `).join('');
+
+      // Client Portal Updates
+      document.getElementById('cl-pkg-balance-pill').textContent = `Active Package Balance: ${appState.clientPackageCredits} Sessions Left`;
+      document.getElementById('cl-assigned-therapist').textContent = `${t.name} (/${t.slug})`;
+
+      document.getElementById('cl-appointments-list').innerHTML = appState.sessions
+        .filter(s => s.clientName.includes('Aarav'))
+        .map(s => `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl border border-slate-200 p-4 text-xs">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-900">${s.serviceName}</span>
+                <span class="rounded-full bg-teal-50 px-2.5 py-0.5 text-[10px] font-bold text-teal-800">${s.status}</span>
+                <span class="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">${s.paymentStatus}</span>
+              </div>
+              <p class="mt-1 text-slate-500">Date: <strong>${s.date}</strong> at <strong>${s.slot} IST</strong> • ₹${s.price}</p>
+            </div>
+            ${s.status === 'CONFIRMED' ? `
+              <button onclick="setAppointmentStatus('${s.id}', 'CANCELLED')" class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-[11px] font-bold text-rose-700 hover:bg-rose-100">
+                Cancel Slot
+              </button>
+            ` : ''}
+          </div>
+        `).join('');
+
+      // Client Shared Notes ONLY (Strict Privacy Enforcement)
+      const privateNotesCount = appState.notes.filter(n => n.noteType === 'private').length;
+      const sharedNotesOnly = appState.notes.filter(n => n.noteType === 'shared');
+      document.getElementById('cl-hidden-count').textContent = `${privateNotesCount} private clinical note(s)`;
+      document.getElementById('cl-shared-notes-container').innerHTML = sharedNotesOnly.map(n => `
+        <div class="rounded-xl border border-teal-200 bg-white p-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="rounded-full bg-teal-100 px-2.5 py-0.5 text-[10px] font-bold text-teal-800">SHARED BY THERAPIST</span>
+            <span class="text-[11px] font-semibold text-slate-400">${n.templateType}</span>
+          </div>
+          <h4 class="mt-2 text-xs font-bold text-slate-900">${n.title}</h4>
+          <div class="mt-1 text-xs text-slate-700 leading-relaxed">${n.content}</div>
+        </div>
+      `).join('');
+
+      // Synced Chat Rendering (Both Therapist & Client Windows)
+      const chatHtml = appState.messages.map(m => {
+        const isTherapist = m.sender === 'therapist';
+        return `
+          <div class="flex ${isTherapist ? 'justify-start' : 'justify-end'}">
+            <div class="max-w-[82%] rounded-2xl px-3.5 py-2.5 text-xs shadow-sm ${
+              isTherapist
+                ? 'bg-white border border-slate-200 text-slate-800 rounded-bl-none'
+                : 'bg-teal-700 text-white rounded-br-none'
+            }">
+              <p class="text-[10px] font-bold ${isTherapist ? 'text-teal-700' : 'text-teal-200'}">
+                ${isTherapist ? t.name : 'Aarav Verma (Client)'} • ${m.time}
+              </p>
+              <p class="mt-1 leading-relaxed">${m.text}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('th-chat-messages').innerHTML = chatHtml;
+      document.getElementById('cl-chat-messages').innerHTML = chatHtml;
+    }
+
+    window.onload = function () {
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+      syncInputFormsFromState();
+      populateTierEditorForm();
+      renderAllViews();
+    };
+  </script>
+</body>
+</html>
